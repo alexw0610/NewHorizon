@@ -6,8 +6,7 @@ import org.joml.Vector3f;
 
 
 import java.io.File;
-import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
+
 
 public class Render {
 

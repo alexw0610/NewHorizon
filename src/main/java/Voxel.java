@@ -7,6 +7,7 @@ import java.lang.Math;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,14 +30,14 @@ public class Voxel {
 
     public void makeRandom(){
 
-        PerlinNoise3d perlin = new PerlinNoise3d(32);
+        PerlinNoise3d perlin = new PerlinNoise3d(5);
 
         for(int i = 0; i < (Math.pow(dim,3));i++){
 
             Vector3f pos = new Vector3f((i%dim),((i/dim)%dim),((i/(dim*dim))%dim));
             //Vector3f middle = new Vector3f(dim/2,dim/2,dim/2);
             //float value = Vector3f.distance(pos.x,pos.y,pos.z,middle.x,middle.y,middle.z);
-            float value = perlin.getValue(new Vector3f(pos.x,pos.y,pos.z));
+            float value = perlin.getValue(new Vector3f(pos.x/4,pos.y/4,pos.z/4));
             //value = (float)Math.random();
             voxelset[i] = value;
 
@@ -89,6 +90,10 @@ public class Voxel {
             short[] indices = LookupTable.getIndices(index);
             float[] vertices = LookupTable.getVertices();
             vertices = interpVerts(vertices,indices,data,isolevel);
+            Object tempValues = optimizeVertices(vertices,indices);
+
+            vertices = tempValues.vertices;
+            indices = tempValues.indices;
 
             float[] normals = createNormals(vertices,indices);
 
@@ -97,6 +102,55 @@ public class Voxel {
 
         }
 
+    }
+
+
+    private Object optimizeVertices(float[] vertices, short[] indices){
+
+        LinkedList<Float> verticesList = new LinkedList<>();
+        LinkedList<Short> indicesList = new LinkedList<>();
+        LinkedList<Short> idc = new LinkedList<>();
+
+        short count = 0;
+        for(int i = 0; i < indices.length;i++){
+            short value = indices[i];
+            if(!indicesList.contains(value)){
+                indicesList.add(value);
+
+                verticesList.add(vertices[value*3]);
+                verticesList.add(vertices[value*3+1]);
+                verticesList.add(vertices[value*3+2]);
+                idc.add(count);
+                count++;
+            }else{
+                idc.add((short)indicesList.indexOf(value));
+            }
+        }
+
+        Object temp = new Object();
+        float[] tempVertices = new float[verticesList.size()];
+        short[] tempIndices = new short[idc.size()];
+        count = 0;
+
+        for(Float value : verticesList){
+            tempVertices[count] = value;
+            count++;
+        }
+        count = 0;
+
+        for(Short value : idc){
+            tempIndices[count] = value;
+            count++;
+        }
+        temp.vertices = tempVertices;
+        temp.indices = tempIndices;
+
+        return temp;
+    }
+
+    class Object{
+        public float[] vertices;
+        public short[] indices;
     }
 
     private float[] interpVerts(float[] vertices, short[] indices, float[] data,float isolevel){
