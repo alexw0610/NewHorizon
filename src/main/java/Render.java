@@ -34,7 +34,7 @@ public class Render {
         gl.glEnableVertexAttribArray(1);
         gl.glEnableVertexAttribArray(2);
 
-        gl.glDrawElements(gl.GL_TRIANGLES,count,gl.GL_UNSIGNED_SHORT,0);
+        gl.glDrawElements(gl.GL_TRIANGLES,count,gl.GL_UNSIGNED_INT,0);
 
         gl.glDisableVertexAttribArray(2);
         gl.glDisableVertexAttribArray(1);

@@ -7,14 +7,13 @@ import java.lang.Math;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 
 public class Voxel {
 
     List<Mesh> meshList = new LinkedList<>();
+    Mesh chunk;
     float[] voxelset;
     int dim;
 
@@ -37,7 +36,7 @@ public class Voxel {
             Vector3f pos = new Vector3f((i%dim),((i/dim)%dim),((i/(dim*dim))%dim));
             //Vector3f middle = new Vector3f(dim/2,dim/2,dim/2);
             //float value = Vector3f.distance(pos.x,pos.y,pos.z,middle.x,middle.y,middle.z);
-            float value = perlin.getValue(new Vector3f(pos.x/4,pos.y/4,pos.z/4));
+            float value = perlin.getValue(new Vector3f(pos.x/8,pos.y/8,pos.z/8));
             //value = (float)Math.random();
             voxelset[i] = value;
 
@@ -65,6 +64,7 @@ public class Voxel {
 
         return data;
     }
+
     private void createMeshes(float isolevel){
 
 
@@ -87,33 +87,119 @@ public class Voxel {
 
             int index = Integer.parseInt(binary, 2);
 
-            short[] indices = LookupTable.getIndices(index);
+            int[] indices = LookupTable.getIndices(index);
             float[] vertices = LookupTable.getVertices();
             vertices = interpVerts(vertices,indices,data,isolevel);
             Object tempValues = optimizeVertices(vertices,indices);
-
             vertices = tempValues.vertices;
             indices = tempValues.indices;
 
-            float[] normals = createNormals(vertices,indices);
+            //float[] normals = createNormals(vertices,indices);
 
-            Mesh temp = new Mesh(vertices,indices,normals,positionf);
+            Mesh temp = new Mesh(vertices,indices,positionf);
+            //temp.loadMesh();
             this.meshList.add(temp);
 
         }
+        mergeMeshes();
 
     }
 
+    private void mergeMeshes(){
+        LinkedList<Float> vertices = new LinkedList<>();
+        LinkedList<Integer> indices = new LinkedList<>();
 
-    private Object optimizeVertices(float[] vertices, short[] indices){
+        int indicesOffset = 0;
+
+        for(int i = 0; i < meshList.size();i++){
+
+            Mesh mesh = meshList.get(i);
+            int count = 0;
+            for(int vert = 0; vert < mesh.vertices.length/3;vert++){
+                vertices.add(mesh.vertices[(vert)*3  ]+mesh.position.x);
+                vertices.add(mesh.vertices[(vert)*3+1]+mesh.position.y);
+                vertices.add(mesh.vertices[(vert)*3+2]+mesh.position.z);
+                count++;
+            }
+
+
+            for(int idc = 0; idc < mesh.indices.length;idc++){
+                indices.add(mesh.indices[idc]+indicesOffset);
+            }
+            indicesOffset = indicesOffset + count;
+
+        }
+
+        float[] verticesArr = new float[vertices.size()];
+        int[] indicesArr = new int[indices.size()];
+
+        int count = 0;
+        for(Float value : vertices){
+            verticesArr[count] = value;
+            count++;
+        }
+        count = 0;
+
+        for(Integer value : indices){
+            indicesArr[count] = value;
+            count++;
+        }
+        chunk = new Mesh(verticesArr,indicesArr,new Vector3f(0,0,0));
+        //chunk = optimizeMesh(chunk);
+        chunk.loadMesh();
+
+    }
+
+    private Mesh optimizeMesh(Mesh mesh){
+
+       LinkedList<Vector3f> visited = new LinkedList<>();
+
+       for(int i = 0; i<mesh.indices.length;i++){
+           float x = mesh.vertices[mesh.indices[i]*3];
+           float y = mesh.vertices[mesh.indices[i]*3+1];
+           float z = mesh.vertices[mesh.indices[i]*3+2];
+
+           boolean found = false;
+           for(Vector3f tempvert: visited){
+               if(tempvert.x == x && tempvert.y == y && tempvert.z == z){
+                   mesh.indices[i] = visited.indexOf(tempvert);
+                   found = true;
+                   break;
+               }
+           }
+           if(!found){
+               visited.add(new Vector3f(x,y,z));
+               mesh.indices[i] = visited.size()-1;
+           }
+
+
+       }
+       float[] newVertices = new float[visited.size()*3];
+       int count = 0;
+       for(Vector3f temp: visited){
+           newVertices[count] = temp.x;
+           count++;
+           newVertices[count] = temp.y;
+           count++;
+           newVertices[count] = temp.z;
+           count++;
+       }
+       mesh.vertices = newVertices;
+       return mesh;
+    }
+
+
+
+
+    private Object optimizeVertices(float[] vertices, int[] indices){
 
         LinkedList<Float> verticesList = new LinkedList<>();
-        LinkedList<Short> indicesList = new LinkedList<>();
-        LinkedList<Short> idc = new LinkedList<>();
+        LinkedList<Integer> indicesList = new LinkedList<>();
+        LinkedList<Integer> idc = new LinkedList<>();
 
-        short count = 0;
+        int count = 0;
         for(int i = 0; i < indices.length;i++){
-            short value = indices[i];
+            int value = indices[i];
             if(!indicesList.contains(value)){
                 indicesList.add(value);
 
@@ -123,13 +209,13 @@ public class Voxel {
                 idc.add(count);
                 count++;
             }else{
-                idc.add((short)indicesList.indexOf(value));
+                idc.add(indicesList.indexOf(value));
             }
         }
 
         Object temp = new Object();
         float[] tempVertices = new float[verticesList.size()];
-        short[] tempIndices = new short[idc.size()];
+        int[] tempIndices = new int[idc.size()];
         count = 0;
 
         for(Float value : verticesList){
@@ -138,7 +224,7 @@ public class Voxel {
         }
         count = 0;
 
-        for(Short value : idc){
+        for(Integer value : idc){
             tempIndices[count] = value;
             count++;
         }
@@ -150,10 +236,10 @@ public class Voxel {
 
     class Object{
         public float[] vertices;
-        public short[] indices;
+        public int[] indices;
     }
 
-    private float[] interpVerts(float[] vertices, short[] indices, float[] data,float isolevel){
+    private float[] interpVerts(float[] vertices, int[] indices, float[] data,float isolevel){
 
         //#TODO: Optimize
 
@@ -211,7 +297,7 @@ public class Voxel {
 
     }
 
-    private float[] createNormals(float[] vertices, short[] indices){
+    private float[] createNormals(float[] vertices, int[] indices){
 
         float[] normals = new float[vertices.length];
 
@@ -249,57 +335,6 @@ public class Voxel {
 
     }
 
-    private float[] createSmoothNormals(float[] vertices, short[] indices){
-
-        float[] normals = new float[vertices.length];
-
-        for(int i = 0; i < vertices.length/3;i = i+3){
-            //per Vertex
-            short vertNumber = (short)(i/3);
-
-            LinkedList<Vector3f> tempNormals = new LinkedList<>();
-
-            for(int x = 0;x < indices.length;x = x+3) {
-
-
-
-                if(indices[x] == vertNumber || indices[x+1] == vertNumber || indices[x+2] == vertNumber){
-
-                    Vector3f v1 = new Vector3f(vertices[indices[x  ]*3],vertices[indices[x  ]*3+1],vertices[indices[x  ]*3+2]);
-                    Vector3f v2 = new Vector3f(vertices[indices[x+1]*3],vertices[indices[x+1]*3+1],vertices[indices[x+1]*3+2]);
-                    Vector3f v3 = new Vector3f(vertices[indices[x+2]*3],vertices[indices[x+2]*3+1],vertices[indices[x+2]*3+2]);
-
-                    Vector3f e1 = new Vector3f(v1).sub(v2);
-                    Vector3f e2 = new Vector3f(v1).sub(v3);
-
-                    Vector3f normal = e1.cross(e2);
-                    normal.normalize();
-                    tempNormals.add(normal);
-
-                }
-
-
-            }
-
-            Vector3f normal = new Vector3f(0,0,0);
-            for(Vector3f temp : tempNormals){
-
-                normal = normal.add(temp);
-
-            }
-
-            normal.div(tempNormals.size());
-            normal.normalize();
-
-            normals[vertNumber*3  ] = normal.x;
-            normals[vertNumber*3+1] = normal.y;
-            normals[vertNumber*3+2] = normal.z;
-        }
-
-        return normals;
-
-
-    }
 
     public List<Mesh> getMeshes(){
 

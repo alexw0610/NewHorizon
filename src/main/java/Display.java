@@ -100,7 +100,7 @@ public class Display implements GLEventListener, KeyListener {
         camera = new Camera();
 
         long start = System.currentTimeMillis();
-        voxel = new Voxel(16,0.45f);
+        voxel = new Voxel(32,0.5f);
         long end = System.currentTimeMillis();
         System.out.println("Time to create: "+(end-start)/1000.0f);
 
@@ -150,6 +150,10 @@ public class Display implements GLEventListener, KeyListener {
         if(getKey(KeyEvent.VK_DOWN)){
             camera.getRotation().x += delta*2;
         }
+        if(getKey(KeyEvent.VK_N)){
+            Loader.unload(voxel.chunk);
+            voxel = new Voxel(32,0.5f);
+        }
 
 
     }
@@ -159,9 +163,9 @@ public class Display implements GLEventListener, KeyListener {
 
         long start = System.currentTimeMillis();
         Render.clear(drawable);
-        for(Mesh mesh : this.voxel.meshList){
-            Render.draw(mesh,camera,drawable);
-        }
+
+        Render.draw(voxel.chunk,camera,drawable);
+
 
         long end = System.currentTimeMillis();
 

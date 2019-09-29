@@ -296,7 +296,7 @@ public class LookupTable {
         {0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-    public static short[] getIndices(int index){
+    public static int[] getIndices(int index){
 
         int[] indices = triTable[index];
         int count = 0;
@@ -305,7 +305,7 @@ public class LookupTable {
                 count++;
             }
         }
-        short[] tempind = new short[count];
+        int[] tempind = new int[count];
         count = 0;
         for(int i = 0; i < indices.length;i++) {
             if(indices[i] != -1){

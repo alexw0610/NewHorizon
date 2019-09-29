@@ -16,7 +16,7 @@ public class PerlinNoise3d {
         gridVectors = new Vector3f[(int)Math.pow(gridSize,3)];
         populateGridVectors();
 
-        //TODO: Remove gridVectors and make indefinatly accessable using seed and function instead of Random
+        //TODO: Remove gridVectors and make indefinitely accessible using seed and function instead of random
     }
 
     private void populateGridVectors(){
