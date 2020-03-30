@@ -1,9 +1,7 @@
 package main.java;
 
 
-
 import java.lang.Math;
-
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
@@ -12,69 +10,28 @@ import java.util.*;
 
 public class Voxel {
 
-    List<Mesh> meshList = new LinkedList<>();
-    Mesh chunk;
-    float[] voxelset;
-    int dim;
-
-    public Voxel(int dim, float isolevel){
-
-        this.dim = dim;
-        voxelset = new float[(int)Math.pow(dim,3)];
-        makeRandom();
-        createMeshes(isolevel);
-
+    public static Mesh getMesh(float[] voxelData, int resolution, int chunkX, int chunkY, int chunkZ){
+        Mesh temp = createMeshes(voxelData,(int)Math.cbrt(voxelData.length),0.5f,resolution);
+        temp.position = new Vector3f(chunkX*LookupTable.CHUNKSIZE,chunkY*LookupTable.CHUNKSIZE,chunkZ*LookupTable.CHUNKSIZE);
+        return temp;
 
     }
 
-    public void makeRandom(){
+    private static Mesh createMeshes(float[] voxelData, int dim, float isolevel, int resolution){
 
-        PerlinNoise3d perlin = new PerlinNoise3d(5);
-
-        for(int i = 0; i < (Math.pow(dim,3));i++){
-
-            Vector3f pos = new Vector3f((i%dim),((i/dim)%dim),((i/(dim*dim))%dim));
-            //Vector3f middle = new Vector3f(dim/2,dim/2,dim/2);
-            //float value = Vector3f.distance(pos.x,pos.y,pos.z,middle.x,middle.y,middle.z);
-            float value = perlin.getValue(new Vector3f(pos.x/8,pos.y/8,pos.z/8));
-            //value = (float)Math.random();
-            voxelset[i] = value;
-
-        }
-
-    }
-    public float[] getValues(Vector3i pos){
-
-        float[] data = new float[8];
-
-        int start = pos.x + pos.z*(dim)+ pos.y*((int)Math.pow(dim,2));
-
-        int square = (int)Math.pow(dim,2);
+        List<Mesh> meshList = new LinkedList<>();
 
 
-        data[3] = voxelset[start];
-        data[2] = voxelset[start+1];
-        data[1] = voxelset[start+1+dim];
-        data[0] = voxelset[start+dim];
-
-        data[7] = voxelset[start+square];
-        data[6] = voxelset[start+square+1];
-        data[5] = voxelset[start+square+1+dim];
-        data[4] = voxelset[start+square+dim];
-
-        return data;
-    }
-
-    private void createMeshes(float isolevel){
-
-
-        for(int i = 0; i <(Math.pow(dim-1,3)); i++){
+        for(int i = 0; i <(Math.pow(dim,3)); i++){
 
 
             Vector3i position = new Vector3i(i%(dim-1),(i/((int)Math.pow(dim-1,2))%(dim-1)),(i/(dim-1))%(dim-1));
             Vector3f positionf = new Vector3f(position.x,position.y,position.z);
+            positionf.add(new Vector3f(0.5f,0.5f,0.5f));
+            positionf.mul(resolution);
 
-            float[] data = getValues(position);
+
+            float[] data = getValues(position, dim, voxelData);
 
             String binary = (data[7] >isolevel ? 0: 1)+""
                     +(data[6] >isolevel ? 0: 1)+""
@@ -89,23 +46,59 @@ public class Voxel {
 
             int[] indices = LookupTable.getIndices(index);
             float[] vertices = LookupTable.getVertices();
-            vertices = interpVerts(vertices,indices,data,isolevel);
-            Object tempValues = optimizeVertices(vertices,indices);
-            vertices = tempValues.vertices;
-            indices = tempValues.indices;
 
-            //float[] normals = createNormals(vertices,indices);
+            if(indices.length > 0){
 
-            Mesh temp = new Mesh(vertices,indices,positionf);
-            //temp.loadMesh();
-            this.meshList.add(temp);
+                vertices = interpVerts(vertices,indices,data,isolevel);
+                vertices = scaleVertices(resolution, vertices);
+                Object tempValues = optimizeVertices(vertices,indices);
+                vertices = tempValues.vertices;
+                indices = tempValues.indices;
 
+                Mesh temp = new Mesh(vertices,indices,positionf);
+
+                meshList.add(temp);
+
+            }
         }
-        mergeMeshes();
+        return mergeMeshes(meshList);
 
     }
 
-    private void mergeMeshes(){
+    private static float[] scaleVertices(int resolution, float[] vertices){
+
+        for(int i = 0; i<vertices.length; i++){
+            vertices[i] = vertices[i]* (float)resolution;
+        }
+
+        return vertices;
+
+    }
+
+    private static float[] getValues(Vector3i pos, int dim, float[] voxelData){
+
+        float[] data = new float[8];
+
+        int start = pos.x + pos.z*(dim)+ pos.y*((int)Math.pow(dim,2));
+
+        int square = (int)Math.pow(dim,2);
+
+
+        data[3] = voxelData[start];
+        data[2] = voxelData[start+1];
+        data[1] = voxelData[start+1+dim];
+        data[0] = voxelData[start+dim];
+
+        data[7] = voxelData[start+square];
+        data[6] = voxelData[start+square+1];
+        data[5] = voxelData[start+square+1+dim];
+        data[4] = voxelData[start+square+dim];
+
+        return data;
+    }
+
+
+    private static Mesh mergeMeshes(List<Mesh> meshList){
         LinkedList<Float> vertices = new LinkedList<>();
         LinkedList<Integer> indices = new LinkedList<>();
 
@@ -144,17 +137,21 @@ public class Voxel {
             indicesArr[count] = value;
             count++;
         }
-        chunk = new Mesh(verticesArr,indicesArr,new Vector3f(0,0,0));
-        //chunk = optimizeMesh(chunk);
-        chunk.loadMesh();
+
+        Mesh chunk = new Mesh(verticesArr,indicesArr,new Vector3f(0,0,0));
+        chunk = optimizeMesh(chunk);
+        chunk.setNormals(createNormals(chunk.vertices,chunk.indices));
+        //chunk.loadMesh();
+        return chunk;
 
     }
 
-    private Mesh optimizeMesh(Mesh mesh){
+    private static Mesh optimizeMesh(Mesh mesh){
 
        LinkedList<Vector3f> visited = new LinkedList<>();
 
        for(int i = 0; i<mesh.indices.length;i++){
+
            float x = mesh.vertices[mesh.indices[i]*3];
            float y = mesh.vertices[mesh.indices[i]*3+1];
            float z = mesh.vertices[mesh.indices[i]*3+2];
@@ -185,13 +182,12 @@ public class Voxel {
            count++;
        }
        mesh.vertices = newVertices;
+
        return mesh;
     }
 
 
-
-
-    private Object optimizeVertices(float[] vertices, int[] indices){
+    private static Object optimizeVertices(float[] vertices, int[] indices){
 
         LinkedList<Float> verticesList = new LinkedList<>();
         LinkedList<Integer> indicesList = new LinkedList<>();
@@ -231,15 +227,16 @@ public class Voxel {
         temp.vertices = tempVertices;
         temp.indices = tempIndices;
 
+
         return temp;
     }
 
-    class Object{
+    static class Object{
         public float[] vertices;
         public int[] indices;
     }
 
-    private float[] interpVerts(float[] vertices, int[] indices, float[] data,float isolevel){
+    private static float[] interpVerts(float[] vertices, int[] indices, float[] data,float isolevel){
 
         //#TODO: Optimize
 
@@ -288,7 +285,7 @@ public class Voxel {
         return vertices;
     }
 
-    private float getInterpCoord(float a, float b, float iso){
+    private static float getInterpCoord(float a, float b, float iso){
 
         float ad = iso-a;
         float bd = iso-b;
@@ -297,48 +294,66 @@ public class Voxel {
 
     }
 
-    private float[] createNormals(float[] vertices, int[] indices){
+    private static float[] createNormals(float[] vertices, int[] indices){
 
         float[] normals = new float[vertices.length];
 
-        for(int i = 0; i < indices.length;i = i+3) {
 
-            Vector3f v1 = new Vector3f(vertices[indices[i  ]*3],vertices[indices[i  ]*3+1],vertices[indices[i  ]*3+2]);
-            Vector3f v2 = new Vector3f(vertices[indices[i+1]*3],vertices[indices[i+1]*3+1],vertices[indices[i+1]*3+2]);
-            Vector3f v3 = new Vector3f(vertices[indices[i+2]*3],vertices[indices[i+2]*3+1],vertices[indices[i+2]*3+2]);
+        for(int vertPos = 0; vertPos < vertices.length;vertPos += 3){
 
-            Vector3f e1 = new Vector3f(v1).sub(v2);
-            Vector3f e2 = new Vector3f(v1).sub(v3);
+            LinkedList<Triangle> tris = new LinkedList<>();
 
-            Vector3f normal = e1.cross(e2);
-            normal.normalize();
+            for(int indPos = 0; indPos < indices.length;indPos += 3){
+                if(indices[indPos] == vertPos/3 || indices[indPos+1] == vertPos/3|| indices[indPos+2] == vertPos/3){
 
-            normals[indices[i  ]*3] = normal.x;
-            normals[indices[i  ]*3+1] = normal.y;
-            normals[indices[i  ]*3+2] = normal.z;
+                    Vector3f a = new Vector3f(vertices[indices[indPos  ]*3],vertices[indices[indPos  ]*3+1],vertices[indices[indPos  ]*3+2]);
+                    Vector3f b = new Vector3f(vertices[indices[indPos+1]*3],vertices[indices[indPos+1]*3+1],vertices[indices[indPos+1]*3+2]);
+                    Vector3f c = new Vector3f(vertices[indices[indPos+2]*3],vertices[indices[indPos+2]*3+1],vertices[indices[indPos+2]*3+2]);
 
-            normals[indices[i+1]*3] = normal.x;
-            normals[indices[i+1]*3+1] = normal.y;
-            normals[indices[i+1]*3+2] = normal.z;
+                    tris.add(new Triangle(a,b,c));
+                }
+            }
+            LinkedList<Vector3f> triNormals = new LinkedList<>();
 
-            normals[indices[i+2]*3] = normal.x;
-            normals[indices[i+2]*3+1] = normal.y;
-            normals[indices[i+2]*3+2] = normal.z;
+            for(Triangle tri: tris){
 
+                Vector3f e1 = new Vector3f(tri.a).sub(tri.b);
+                Vector3f e2 = new Vector3f(tri.a).sub(tri.c);
+                Vector3f normal = e1.cross(e2);
+
+
+                triNormals.add(normal);
+
+            }
+            Vector3f targetNormal = new Vector3f(0,0,0);
+            for(Vector3f normal : triNormals){
+                targetNormal.add(normal);
+            }
+            targetNormal.normalize();
+
+            normals[vertPos  ] = targetNormal.x;
+            normals[vertPos+1] = targetNormal.y;
+            normals[vertPos+2] = targetNormal.z;
 
 
         }
-
 
 
         return normals;
 
     }
 
-
-    public List<Mesh> getMeshes(){
-
-        return this.meshList;
+    private static class Triangle{
+        Vector3f a;
+        Vector3f b;
+        Vector3f c;
+        public Triangle(Vector3f a, Vector3f b, Vector3f c){
+            this.a = a;
+            this.b = b;
+            this.c = c;
+        }
     }
+
+
 
 }

@@ -7,22 +7,26 @@ import com.jogamp.newt.event.WindowEvent;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.*;
 import com.jogamp.opengl.util.Animator;
+import org.joml.Math;
 import org.joml.Vector3f;
+import org.joml.Vector3i;
 
 import java.util.BitSet;
-
+import java.util.LinkedList;
 
 
 public class Display implements GLEventListener, KeyListener {
 
 
-    private int vaoID;
-
     private BitSet keyStates = new BitSet(512);
     private Animator animator;
-
     private Camera camera;
-    private Voxel voxel;
+
+    private LinkedList<Mesh> meshList = new LinkedList<>();
+
+    private Mesh grid;
+    private float frameDelta;
+    private TerrainLoaderAsync terrainLoader;
 
     Display(){
         setup();
@@ -57,9 +61,6 @@ public class Display implements GLEventListener, KeyListener {
         window.setSize((int)Settings.WIDTH, (int)Settings.HEIGHT);
         window.setTitle("New Horizon");
         window.setVisible(true);
-
-
-
         animator.setRunAsFastAsPossible(true);
         animator.start();  // start the animator loop
 
@@ -77,13 +78,14 @@ public class Display implements GLEventListener, KeyListener {
         keyStates.set(code,true);
 
     }
+
     private void unsetKey(short code){
         keyStates.set(code,false);
     }
+
     private boolean getKey(short code){
         return keyStates.get(code);
     }
-
     @Override
     public void keyReleased(KeyEvent e) {
         if(!e.isAutoRepeat()){
@@ -94,15 +96,15 @@ public class Display implements GLEventListener, KeyListener {
     @Override
     public void init(GLAutoDrawable drawable) {
         GL4 gl = drawable.getGL().getGL4();
-        gl.glEnable(gl.GL_DEPTH);
         gl.glEnable(gl.GL_DEPTH_TEST);
-
+        gl.glDepthFunc(gl.GL_LESS);
+        gl.glEnable (gl.GL_BLEND);
+        gl.glBlendFunc (gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
+        terrainLoader = new TerrainLoaderAsync();
         camera = new Camera();
-
-        long start = System.currentTimeMillis();
-        voxel = new Voxel(32,0.5f);
-        long end = System.currentTimeMillis();
-        System.out.println("Time to create: "+(end-start)/1000.0f);
+        grid = Grid.getGrid();
+        grid.type = MeshType.LINE;
+        grid.loadMesh();
 
 
     }
@@ -114,69 +116,102 @@ public class Display implements GLEventListener, KeyListener {
 
     private void update(){
 
-        float delta = -0.2f;
+
+        float delta = -1.0f*frameDelta;
+        float viewDelta = -0.1f*frameDelta;
+
 
         if(getKey(KeyEvent.VK_W)){
-            camera.getPosition().z += delta;
+            camera.movePosition(0,0,delta);
         }
         if(getKey(KeyEvent.VK_S)){
-            camera.getPosition().z -= delta;
+            camera.movePosition(0,0,-delta);
         }
 
         if(getKey(KeyEvent.VK_A)){
-            camera.getPosition().x -= delta;
+            camera.movePosition(-delta,0,0);
         }
         if(getKey(KeyEvent.VK_D)){
-            camera.getPosition().x += delta;
+            camera.movePosition(delta,0,0);
         }
 
         if(getKey(KeyEvent.VK_Q)){
-            camera.getPosition().y += delta;
+            camera.movePosition(0,delta,0);
         }
         if(getKey(KeyEvent.VK_E)){
-            camera.getPosition().y -= delta;
+            camera.movePosition(0,-delta,0);
         }
+
+                //ROTATION
 
         if(getKey(KeyEvent.VK_LEFT)){
-            camera.getRotation().y -= delta*2;
+            camera.getRotation().y -= viewDelta;
         }
         if(getKey(KeyEvent.VK_RIGHT)){
-            camera.getRotation().y += delta*2;
+            camera.getRotation().y += viewDelta;
         }
-
         if(getKey(KeyEvent.VK_UP)){
-            camera.getRotation().x -= delta*2;
+            camera.getRotation().x -= viewDelta;
         }
         if(getKey(KeyEvent.VK_DOWN)){
-            camera.getRotation().x += delta*2;
+            camera.getRotation().x += viewDelta;
         }
-        if(getKey(KeyEvent.VK_N)){
-            Loader.unload(voxel.chunk);
-            voxel = new Voxel(32,0.5f);
+
+                //DEBUG
+
+        if(getKey(KeyEvent.VK_R)){
+
+        }
+        if(getKey(KeyEvent.VK_T)){
+
+        }
+
+        Vector3i newChunk = new Vector3i((int)Math.floor(camera.getPosition().x/LookupTable.CHUNKSIZE),(int)Math.floor(camera.getPosition().y/LookupTable.CHUNKSIZE),(int)Math.floor(camera.getPosition().z/LookupTable.CHUNKSIZE));
+        Vector3f oldPosition = terrainLoader.getPosition();
+        Vector3i oldChunk = new Vector3i((int)Math.floor(oldPosition.x/LookupTable.CHUNKSIZE),(int)Math.floor(oldPosition.y/LookupTable.CHUNKSIZE),(int)Math.floor(oldPosition.z/LookupTable.CHUNKSIZE));
+        if(oldChunk.x != newChunk.x || oldChunk.y != newChunk.y || oldChunk.z != newChunk.z){
+
+            terrainLoader.requestTerrain(camera.getPosition());
+        }
+        if(terrainLoader.hasUpdated()){
+            for(Mesh mesh : meshList){
+                mesh.unloadMesh();
+
+            }
+            this.meshList = terrainLoader.getRequestedTerrain();
+            for(Mesh mesh : meshList){
+                mesh.loadMesh();
+
+            }
         }
 
 
     }
-    boolean rendered = false;
+
     @Override
     public void display(GLAutoDrawable drawable) {
 
+        update();
+
         long start = System.currentTimeMillis();
+
         Render.clear(drawable);
 
-        Render.draw(voxel.chunk,camera,drawable);
+        for(Mesh mesh: meshList){
+            Render.draw(mesh,camera,drawable);
+        }
+        Render.drawAxisGrid(drawable,camera,grid);
 
 
-        long end = System.currentTimeMillis();
-
-        if(!rendered){
-            System.out.println("Time to render once: "+(end-start)/1000.0f);
-            rendered = true;
-
+        while((System.currentTimeMillis()-start)/1000.0f < 0.01f){
+            try {
+                Thread.sleep(0,1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
-
-        update();
+        frameDelta = System.currentTimeMillis()-start;
 
     }
 

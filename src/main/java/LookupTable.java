@@ -296,6 +296,8 @@ public class LookupTable {
         {0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
+    public static int CHUNKSIZE = 16;
+
     public static int[] getIndices(int index){
 
         int[] indices = triTable[index];
@@ -309,7 +311,7 @@ public class LookupTable {
         count = 0;
         for(int i = 0; i < indices.length;i++) {
             if(indices[i] != -1){
-                tempind[i] = (short)indices[i];
+                tempind[i] = indices[i];
                 count++;
             }
         }
@@ -319,7 +321,7 @@ public class LookupTable {
 
     public static float[] getVertices(){
 
-        return vertices;
+        return vertices.clone();
 
     }
 

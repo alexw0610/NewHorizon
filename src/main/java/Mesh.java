@@ -11,6 +11,8 @@ public class Mesh {
     int[] indices;
     float[] normals;
 
+    MeshType type = MeshType.TRIANGLE;
+
     int vaoID;
 
 
@@ -34,10 +36,17 @@ public class Mesh {
 
     }
 
+    public void setNormals(float[] normals){
+        this.normals = normals;
+    }
+
     public void loadMesh(){
 
         vaoID = Loader.loadToGPU(this);
 
+    }
+    public void unloadMesh(){
+        Loader.unload(this);
     }
 
 }
