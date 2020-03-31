@@ -16,14 +16,18 @@ float lambertian(){
 }
 
 void main(){
-        vec3 center = vec3(0,0,0);
-        //float dist = max(distance(center,positionWorldSpace.xyz),0);
-        //vec3 c = mix(vec3(1,0,0),vec3(0,0,1),max(mod(dist,20),0)/20);
-        //vec3 c2 = mix(c,vec3(0,0,1),max(dist-512,0)/5);
+        vec3 center = vec3(8192.0,8192.0,8192.0);
+        float dist = distance(center,positionWorldSpace.xyz);
 
-        vec3 color = vec3(0.0/255.0,255.0/255.0,140.0/255.0);
+
+        vec3 purple = vec3(153.0/255.0,0.0/255.0,255.0/255.0);
+        vec3 orange = vec3(255.0/255.0,102.0/255.0,0.0/255.0);
+        vec3 green = vec3(68.0/255.0,255.0/255.0,0.0/255.0);
+        float relDist = dist-7632; //0-560
+        vec3 colorA = mix(mix(purple,orange,relDist/186),mix(orange,green,relDist/280),relDist/560);
+
         float light = lambertian();
-        fragColor = vec4(color*light,1);
+        fragColor = vec4(colorA*light,1);
 
 }
 

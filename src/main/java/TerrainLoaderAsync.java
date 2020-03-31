@@ -29,32 +29,43 @@ public class TerrainLoaderAsync implements Runnable{
     public void run() {
         while(t.isAlive()){
             if(updateRequest && !updated){
-                System.out.println("working");
+                System.out.println("...");
+                long start = System.currentTimeMillis();
                 LinkedList<Octree.Node> struct = tree.searchChunk(position);
-
+                long search = System.currentTimeMillis();
                 meshes.clear();
 
+                long dataTime = 0;
+                long meshTime = 0;
                 for(Octree.Node node : struct){
-
+                    long loopstart = System.currentTimeMillis();
                     float[] data = planet.getData(node.indexX,node.indexY,node.indexZ,node.span,node.span);
+                    long loopmiddle = System.currentTimeMillis();
                     meshes.add(Voxel.getMesh(data, node.span, node.indexX,node.indexY,node.indexZ));
+                    long loopend = System.currentTimeMillis();
+                    dataTime += loopmiddle-loopstart;
+                    meshTime += loopend -loopmiddle;
                 }
 
                 updated = true;
                 updateRequest = false;
-                System.out.println("finished");
+                System.out.println((search-start)/1000.0f+" for getting the right chunks from octree!");
+                System.out.println((dataTime)/1000.0f+" for getting the data for the chunks!");
+                System.out.println((meshTime)/1000.0f+" for creating the meshes from the data!");
+
             }
         }
 
 
     }
 
-    public void requestTerrain(Vector3f position){
+    public boolean requestTerrain(Vector3f position){
         if(!updateRequest && !updated){
             this.position = new Vector3f(position);
             updateRequest = true;
+            return true;
         }
-
+        return false;
     }
     public LinkedList<Mesh> getRequestedTerrain(){
         updated = false;

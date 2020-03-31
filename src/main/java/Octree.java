@@ -50,26 +50,11 @@ public class Octree {
             isLeaf = (span <= 1);
 
         }
-        public void createChildren(){
 
-            if(!isLeaf){
-                short childSpan = (short) (span/2);
-                children[0]=(new Node(indexX,indexY,indexZ,childSpan,this));
-                children[1]=(new Node((short)(indexX+childSpan),indexY,indexZ,childSpan,this));
-                children[2]=(new Node(indexX,indexY, (short) (indexZ+childSpan),childSpan,this));
-                children[3]=(new Node((short) (indexX+childSpan),indexY,(short)(indexZ+childSpan),childSpan,this));
-
-                children[4]=(new Node(indexX,(short)(indexY+childSpan),indexZ,childSpan,this));
-                children[5]=(new Node((short)(indexX+childSpan),(short)(indexY+childSpan),indexZ,childSpan,this));
-                children[6]=(new Node(indexX,(short)(indexY+childSpan),(short)(indexZ+childSpan),childSpan,this));
-                children[7]=(new Node((short)(indexX+childSpan),(short)(indexY+childSpan),(short)(indexZ+childSpan),childSpan,this));
-
-            }
-        }
         public LinkedList<Node> getParts(Vector3f position){
             LinkedList<Node> chunks = new LinkedList<>();
 
-            if(getDistance(position)>(((span*LookupTable.CHUNKSIZE)*Math.sqrt(3))/2)){
+            if(getDistance(position)>(((span*LookupTable.CHUNKSIZE)*Math.sqrt(3))/2)*2){
                 chunks.add(this);
                 return chunks;
             }else{

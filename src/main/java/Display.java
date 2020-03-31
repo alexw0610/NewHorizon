@@ -27,7 +27,7 @@ public class Display implements GLEventListener, KeyListener {
     private Mesh grid;
     private float frameDelta;
     private TerrainLoaderAsync terrainLoader;
-
+    long lastRequestMade = 0;
     Display(){
         setup();
     }
@@ -171,9 +171,12 @@ public class Display implements GLEventListener, KeyListener {
         Vector3i oldChunk = new Vector3i((int)Math.floor(oldPosition.x/LookupTable.CHUNKSIZE),(int)Math.floor(oldPosition.y/LookupTable.CHUNKSIZE),(int)Math.floor(oldPosition.z/LookupTable.CHUNKSIZE));
         if(oldChunk.x != newChunk.x || oldChunk.y != newChunk.y || oldChunk.z != newChunk.z){
 
-            terrainLoader.requestTerrain(camera.getPosition());
+            if(terrainLoader.requestTerrain(camera.getPosition())){
+                lastRequestMade = System.currentTimeMillis();
+            }
         }
         if(terrainLoader.hasUpdated()){
+            long update = System.currentTimeMillis();
             for(Mesh mesh : meshList){
                 mesh.unloadMesh();
 
@@ -183,6 +186,9 @@ public class Display implements GLEventListener, KeyListener {
                 mesh.loadMesh();
 
             }
+            long current = System.currentTimeMillis();
+            System.out.println((current-update)/1000.0f+" seconds for uploading Terrain to gpu!");
+            System.out.println((current-lastRequestMade)/1000.0f+" seconds for updating Terrain!");
         }
 
 
