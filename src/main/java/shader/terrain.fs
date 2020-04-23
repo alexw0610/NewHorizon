@@ -11,7 +11,7 @@ vec3 lightPos = vec3(-1,-1,-1);
 
 float lambertian(){
 
-    return max(dot(normals,normalize(lightPos)),0.2);
+    return max(dot(normals,normalize(lightPos)),0.5);
 
 }
 

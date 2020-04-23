@@ -21,11 +21,12 @@ public class Voxel {
 
         List<Mesh> meshList = new LinkedList<>();
 
+        double cube = Math.pow(dim,3);
+        int square = (int)Math.pow(dim-1,2);
+        for(int i = 0; i < cube; i++){
 
-        for(int i = 0; i <(Math.pow(dim,3)); i++){
 
-
-            Vector3i position = new Vector3i(i%(dim-1),(i/((int)Math.pow(dim-1,2))%(dim-1)),(i/(dim-1))%(dim-1));
+            Vector3i position = new Vector3i(i%(dim-1),(i/(square)%(dim-1)),(i/(dim-1))%(dim-1));
             Vector3f positionf = new Vector3f(position.x,position.y,position.z);
             positionf.add(new Vector3f(0.5f,0.5f,0.5f));
             positionf.mul(resolution);
@@ -103,20 +104,21 @@ public class Voxel {
         LinkedList<Integer> indices = new LinkedList<>();
 
         int indicesOffset = 0;
-
-        for(int i = 0; i < meshList.size();i++){
+        int size = meshList.size();
+        for(int i = 0; i < size;i++){
 
             Mesh mesh = meshList.get(i);
             int count = 0;
-            for(int vert = 0; vert < mesh.vertices.length/3;vert++){
+            int VertLength = mesh.vertices.length/3;
+            for(int vert = 0; vert < VertLength;vert++){
                 vertices.add(mesh.vertices[(vert)*3  ]+mesh.position.x);
                 vertices.add(mesh.vertices[(vert)*3+1]+mesh.position.y);
                 vertices.add(mesh.vertices[(vert)*3+2]+mesh.position.z);
                 count++;
             }
 
-
-            for(int idc = 0; idc < mesh.indices.length;idc++){
+            int indLength = mesh.indices.length;
+            for(int idc = 0; idc < indLength;idc++){
                 indices.add(mesh.indices[idc]+indicesOffset);
             }
             indicesOffset = indicesOffset + count;
@@ -127,19 +129,19 @@ public class Voxel {
         int[] indicesArr = new int[indices.size()];
 
         int count = 0;
-        for(Float value : vertices){
+        for(float value : vertices){
             verticesArr[count] = value;
             count++;
         }
         count = 0;
 
-        for(Integer value : indices){
+        for(int value : indices){
             indicesArr[count] = value;
             count++;
         }
 
-        Mesh chunk = new Mesh(verticesArr,indicesArr,new Vector3f(0,0,0));
-        chunk = optimizeMesh(chunk);
+        Mesh chunk = optimizeMesh(new Mesh(verticesArr,indicesArr,new Vector3f(0,0,0)));
+        //Mesh chunk = new Mesh(verticesArr,indicesArr,new Vector3f(0,0,0));
         chunk.setNormals(createNormals(chunk.vertices,chunk.indices));
         //chunk.loadMesh();
         return chunk;
@@ -214,13 +216,13 @@ public class Voxel {
         int[] tempIndices = new int[idc.size()];
         count = 0;
 
-        for(Float value : verticesList){
+        for(float value : verticesList){
             tempVertices[count] = value;
             count++;
         }
         count = 0;
 
-        for(Integer value : idc){
+        for(int value : idc){
             tempIndices[count] = value;
             count++;
         }
@@ -289,8 +291,9 @@ public class Voxel {
 
         float ad = iso-a;
         float bd = iso-b;
-        float range = Math.abs(ad)+Math.abs(bd);
-        return (Math.abs(ad)*(1.0f/range))-0.5f;
+        float adAbs = Math.abs(ad);
+        float range = adAbs+Math.abs(bd);
+        return (adAbs*(1.0f/range))-0.5f;
 
     }
 

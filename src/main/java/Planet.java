@@ -16,7 +16,10 @@ public class Planet {
 
     }
 
-    public float[] getData(int chunkX, int chunkY, int chunkZ, int span,int resolution){
+    public Mesh getMesh(int chunkX, int chunkY, int chunkZ, int span){
+        return Voxel.getMesh(getData(chunkX,chunkY,chunkZ,span,span),span,chunkX,chunkY,chunkZ);
+    }
+    private float[] getData(int chunkX, int chunkY, int chunkZ, int span,int resolution){
 
 
         int side = LookupTable.CHUNKSIZE;

@@ -100,6 +100,8 @@ public class Display implements GLEventListener, KeyListener {
         gl.glDepthFunc(gl.GL_LESS);
         gl.glEnable (gl.GL_BLEND);
         gl.glBlendFunc (gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
+        gl.glPolygonMode( gl.GL_FRONT, gl.GL_FILL );
+
         terrainLoader = new TerrainLoaderAsync();
         camera = new Camera();
         grid = Grid.getGrid();
