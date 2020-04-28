@@ -16,7 +16,7 @@ public class Transformation {
     public static float[] getProjectionMatrix(){
 
         float aspectRatio = Settings.WIDTH / Settings.HEIGHT;
-        projectionMatrix.identity().perspective(75.0f, aspectRatio, 1.0f, 100000.0f);
+        projectionMatrix.identity().perspective((float)Math.toRadians(-45.0f), aspectRatio, 0.1f, 10000.0f);
         projectionMatrix.get(projectionMatrixArr);
 
         return projectionMatrixArr;

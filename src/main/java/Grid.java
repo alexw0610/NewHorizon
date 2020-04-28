@@ -13,35 +13,35 @@ public class Grid {
 
         for(int x = 0; x < 16; x++){
             for(int i = 0; i < 16; i++){
-                vertices[count++] = 32*x;
-                vertices[count++] = 32*i;
+                vertices[count++] = LookupTable.CHUNKSIZE*x;
+                vertices[count++] = LookupTable.CHUNKSIZE*i;
                 vertices[count++] = 0;
 
-                vertices[count++] = 32*x;
-                vertices[count++] = 32*i;
-                vertices[count++] = 512;
+                vertices[count++] = LookupTable.CHUNKSIZE*x;
+                vertices[count++] = LookupTable.CHUNKSIZE*i;
+                vertices[count++] = LookupTable.CHUNKSIZE*LookupTable.CHUNKSIZE;
             }
         }
         for(int y = 0; y < 16; y++){
             for(int i = 0; i < 16; i++){
-                vertices[count++] = 32*i;
+                vertices[count++] = LookupTable.CHUNKSIZE*i;
                 vertices[count++] = 0;
-                vertices[count++] = 32*y;
+                vertices[count++] = LookupTable.CHUNKSIZE*y;
 
-                vertices[count++] = 32*i;
-                vertices[count++] = 512;
-                vertices[count++] = 32*y;
+                vertices[count++] = LookupTable.CHUNKSIZE*i;
+                vertices[count++] = LookupTable.CHUNKSIZE*LookupTable.CHUNKSIZE;
+                vertices[count++] = LookupTable.CHUNKSIZE*y;
             }
         }
         for(int z = 0; z < 16; z++){
             for(int i = 0; i < 16; i++){
                 vertices[count++] = 0;
-                vertices[count++] = 32*z;
-                vertices[count++] = 32*i;
+                vertices[count++] = LookupTable.CHUNKSIZE*z;
+                vertices[count++] = LookupTable.CHUNKSIZE*i;
 
-                vertices[count++] = 512;
-                vertices[count++] = 32*z;
-                vertices[count++] = 32*i;
+                vertices[count++] = LookupTable.CHUNKSIZE*LookupTable.CHUNKSIZE;
+                vertices[count++] = LookupTable.CHUNKSIZE*z;
+                vertices[count++] = LookupTable.CHUNKSIZE*i;
             }
         }
 
@@ -51,6 +51,14 @@ public class Grid {
             indices[i] = i;
         }
 
-        return new Mesh(vertices,indices,new Vector3f(0,0,0));
+        short[] colors = new short[3*1536];
+
+        for(int i = 0; i < 1536;i++){
+            colors[i*3]      = i<512 ?  (short)1 : 0;
+            colors[i*3+1]    = i<1024 && i>512 ?  (short)1 : 0;
+            colors[i*3+2]    = i>1024 ?  (short)1 : 0;
+        }
+
+        return new Mesh(vertices,colors,indices,new Vector3f(0,0,0));
     }
 }

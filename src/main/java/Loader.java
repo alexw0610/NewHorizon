@@ -5,6 +5,8 @@ import com.jogamp.opengl.GLContext;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
+import java.util.Arrays;
 
 
 public class Loader {
@@ -18,9 +20,8 @@ public class Loader {
         int[] vaoids = new int[1];
         gl.glGenVertexArrays(1,vaoids,0);
 
-
-        int[] vboids = new int[3];
-        gl.glGenBuffers(3,vboids,0);
+        int[] vboids = new int[4];
+        gl.glGenBuffers(4,vboids,0);
 
         gl.glBindVertexArray(vaoids[0]);
 
@@ -32,35 +33,48 @@ public class Loader {
         gl.glBufferData(gl.GL_ARRAY_BUFFER, mesh.vertices.length * 4 ,verticesBuffer,gl.GL_STATIC_DRAW);
         gl.glEnableVertexAttribArray(0);
         gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, false, 0, 0);
-
         verticesBuffer.clear();
         verticesBuffer = null;
+
+        //normal buffer
+        FloatBuffer normalBuffer = FloatBuffer.allocate(mesh.normals.length);
+        normalBuffer.put(mesh.normals);
+        normalBuffer.flip();
+
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vboids[1]);
+        gl.glBufferData(gl.GL_ARRAY_BUFFER, mesh.normals.length * 4 ,normalBuffer,gl.GL_STATIC_DRAW);
+        gl.glEnableVertexAttribArray(1);
+        gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, false, 0, 0);
+        normalBuffer.clear();
+        normalBuffer = null;
+
+
+        //color buffer
+
+        ShortBuffer colorBuffer = ShortBuffer.allocate(mesh.colors.length);
+        colorBuffer.put(mesh.colors);
+        colorBuffer.flip();
+
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vboids[2]);
+        gl.glBufferData(gl.GL_ARRAY_BUFFER, mesh.colors.length * 2 ,colorBuffer,gl.GL_STATIC_DRAW);
+        gl.glEnableVertexAttribArray(2);
+
+        gl.glVertexAttribIPointer(2, 1, gl.GL_SHORT, 0, 0);
+        colorBuffer.clear();
+        colorBuffer = null;
 
         IntBuffer indicesBuffer = IntBuffer.allocate(mesh.indices.length);
         indicesBuffer.put(mesh.indices);
         indicesBuffer.flip();
 
-        gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, vboids[1]);
+        gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, vboids[3]);
         gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, mesh.indices.length * 4 ,indicesBuffer,gl.GL_STATIC_DRAW);
-        gl.glEnableVertexAttribArray(1);
-        gl.glVertexAttribPointer(1, mesh.type.equals(MeshType.TRIANGLE) ? 3 : mesh.type.equals(MeshType.LINE) ? 2 : mesh.type.equals(MeshType.POINT) ? 1:0, gl.GL_UNSIGNED_INT, false, 0, 0);
-
+        //gl.glEnableVertexAttribArray(1);
+        //gl.glVertexAttribPointer(1, mesh.type.equals(MeshType.TRIANGLE) ? 3 : mesh.type.equals(MeshType.LINE) ? 2 : mesh.type.equals(MeshType.POINT) ? 1:0, gl.GL_UNSIGNED_INT, false, 0, 0);
         indicesBuffer.clear();
         indicesBuffer = null;
 
-        FloatBuffer normalBuffer = FloatBuffer.allocate(mesh.normals.length);
-        normalBuffer.put(mesh.normals);
-        normalBuffer.flip();
-
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vboids[2]);
-        gl.glBufferData(gl.GL_ARRAY_BUFFER, mesh.normals.length * 4 ,normalBuffer,gl.GL_STATIC_DRAW);
-        gl.glEnableVertexAttribArray(2);
-        gl.glVertexAttribPointer(2, 3, gl.GL_FLOAT, false, 0, 0);
-
-        normalBuffer.clear();
-        normalBuffer = null;
-
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER,0);
+        //gl.glBindBuffer(gl.GL_ARRAY_BUFFER,0);
         gl.glBindVertexArray(0);
 
 

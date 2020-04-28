@@ -25,7 +25,7 @@ public class Shader {
 
     public Shader(File file){
 
-        GL3 gl = GLContext.getCurrentGL().getGL3();
+        GL4 gl = GLContext.getCurrentGL().getGL4();
         String[] temp = file.getName().split("\\.");
         name = temp[0];
         program = gl.glCreateProgram();

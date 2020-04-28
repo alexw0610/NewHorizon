@@ -64,6 +64,7 @@ public class Display implements GLEventListener, KeyListener {
         animator.setRunAsFastAsPossible(true);
         animator.start();  // start the animator loop
 
+
     }
 
 
@@ -100,8 +101,9 @@ public class Display implements GLEventListener, KeyListener {
         gl.glDepthFunc(gl.GL_LESS);
         gl.glEnable (gl.GL_BLEND);
         gl.glBlendFunc (gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
-        gl.glPolygonMode( gl.GL_FRONT, gl.GL_FILL );
-
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
+        gl.glEnable(gl.GL_CULL_FACE);
+        gl.glCullFace(gl.GL_BACK);
         terrainLoader = new TerrainLoaderAsync();
         camera = new Camera();
         grid = Grid.getGrid();
@@ -119,7 +121,7 @@ public class Display implements GLEventListener, KeyListener {
     private void update(){
 
 
-        float delta = -1.0f*frameDelta;
+        float delta = -0.25f*frameDelta;
         float viewDelta = -0.1f*frameDelta;
 
 

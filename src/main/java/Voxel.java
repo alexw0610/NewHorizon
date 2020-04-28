@@ -10,14 +10,14 @@ import java.util.*;
 
 public class Voxel {
 
-    public static Mesh getMesh(float[] voxelData, int resolution, int chunkX, int chunkY, int chunkZ){
-        Mesh temp = createMeshes(voxelData,(int)Math.cbrt(voxelData.length),0.5f,resolution);
+    public static Mesh getMesh(float[] voxelData,short[] voxelColor, int resolution, int chunkX, int chunkY, int chunkZ){
+        Mesh temp = createMeshes(voxelData,voxelColor,(int)Math.cbrt(voxelData.length),0.5f,resolution);
         temp.position = new Vector3f(chunkX*LookupTable.CHUNKSIZE,chunkY*LookupTable.CHUNKSIZE,chunkZ*LookupTable.CHUNKSIZE);
         return temp;
 
     }
 
-    private static Mesh createMeshes(float[] voxelData, int dim, float isolevel, int resolution){
+    private static Mesh createMeshes(float[] voxelData,short[] voxelColor, int dim, float isolevel, int resolution){
 
         List<Mesh> meshList = new LinkedList<>();
 
@@ -33,6 +33,7 @@ public class Voxel {
 
 
             float[] data = getValues(position, dim, voxelData);
+            short[] colors = getColor(position, dim, voxelColor);
 
             String binary = (data[7] >isolevel ? 0: 1)+""
                     +(data[6] >isolevel ? 0: 1)+""
@@ -42,7 +43,6 @@ public class Voxel {
                     +(data[2] >isolevel ? 0: 1)+""
                     +(data[1] >isolevel ? 0: 1)+""
                     +(data[0] >isolevel ? 0: 1);
-
             int index = Integer.parseInt(binary, 2);
 
             int[] indices = LookupTable.getIndices(index);
@@ -51,12 +51,14 @@ public class Voxel {
             if(indices.length > 0){
 
                 vertices = interpVerts(vertices,indices,data,isolevel);
+                colors = interpColors(vertices,indices,colors);
                 vertices = scaleVertices(resolution, vertices);
-                Object tempValues = optimizeVertices(vertices,indices);
+                Object tempValues = optimizeVertices(vertices,indices,colors);
                 vertices = tempValues.vertices;
                 indices = tempValues.indices;
+                colors = tempValues.colors;
 
-                Mesh temp = new Mesh(vertices,indices,positionf);
+                Mesh temp = new Mesh(vertices,colors,indices,positionf);
 
                 meshList.add(temp);
 
@@ -75,14 +77,29 @@ public class Voxel {
         return vertices;
 
     }
+    private static short[] getColor(Vector3i pos, int dim, short[] voxelColor){
+        short[] data = new short[8];
+        int square = (int)Math.pow(dim,2);
+        int start = pos.x + pos.z*dim+ pos.y*square;
+
+        data[3] = voxelColor[start];
+        data[2] = voxelColor[start+1];
+        data[1] = voxelColor[start+1+dim];
+        data[0] = voxelColor[start+dim];
+
+        data[7] = voxelColor[start+square];
+        data[6] = voxelColor[start+square+1];
+        data[5] = voxelColor[start+square+1+dim];
+        data[4] = voxelColor[start+square+dim];
+
+        return data;
+    }
 
     private static float[] getValues(Vector3i pos, int dim, float[] voxelData){
 
         float[] data = new float[8];
-
-        int start = pos.x + pos.z*(dim)+ pos.y*((int)Math.pow(dim,2));
-
         int square = (int)Math.pow(dim,2);
+        int start = pos.x + pos.z*(dim)+ pos.y*square;
 
 
         data[3] = voxelData[start];
@@ -100,8 +117,10 @@ public class Voxel {
 
 
     private static Mesh mergeMeshes(List<Mesh> meshList){
+        //TODO: Optimize
         LinkedList<Float> vertices = new LinkedList<>();
         LinkedList<Integer> indices = new LinkedList<>();
+        LinkedList<Short> colors = new LinkedList<>();
 
         int indicesOffset = 0;
         int size = meshList.size();
@@ -114,6 +133,7 @@ public class Voxel {
                 vertices.add(mesh.vertices[(vert)*3  ]+mesh.position.x);
                 vertices.add(mesh.vertices[(vert)*3+1]+mesh.position.y);
                 vertices.add(mesh.vertices[(vert)*3+2]+mesh.position.z);
+                colors.add(mesh.colors[vert]);
                 count++;
             }
 
@@ -123,11 +143,13 @@ public class Voxel {
             }
             indicesOffset = indicesOffset + count;
 
+
+
         }
 
         float[] verticesArr = new float[vertices.size()];
         int[] indicesArr = new int[indices.size()];
-
+        short[] colorsArr = new short[colors.size()];
         int count = 0;
         for(float value : vertices){
             verticesArr[count] = value;
@@ -139,8 +161,15 @@ public class Voxel {
             indicesArr[count] = value;
             count++;
         }
+        count = 0;
 
-        Mesh chunk = optimizeMesh(new Mesh(verticesArr,indicesArr,new Vector3f(0,0,0)));
+        for(short value : colors){
+            colorsArr[count] = value;
+            count++;
+        }
+
+
+        Mesh chunk = optimizeMesh(new Mesh(verticesArr,colorsArr,indicesArr,new Vector3f(0,0,0)));
         //Mesh chunk = new Mesh(verticesArr,indicesArr,new Vector3f(0,0,0));
         chunk.setNormals(createNormals(chunk.vertices,chunk.indices));
         //chunk.loadMesh();
@@ -151,14 +180,15 @@ public class Voxel {
     private static Mesh optimizeMesh(Mesh mesh){
 
        LinkedList<Vector3f> visited = new LinkedList<>();
+       LinkedList<Short> colors = new LinkedList<>();
 
        for(int i = 0; i<mesh.indices.length;i++){
 
            float x = mesh.vertices[mesh.indices[i]*3];
            float y = mesh.vertices[mesh.indices[i]*3+1];
            float z = mesh.vertices[mesh.indices[i]*3+2];
-
            boolean found = false;
+
            for(Vector3f tempvert: visited){
                if(tempvert.x == x && tempvert.y == y && tempvert.z == z){
                    mesh.indices[i] = visited.indexOf(tempvert);
@@ -168,31 +198,41 @@ public class Voxel {
            }
            if(!found){
                visited.add(new Vector3f(x,y,z));
+               colors.add(mesh.colors[mesh.indices[i]]);
                mesh.indices[i] = visited.size()-1;
-           }
 
+           }
 
        }
        float[] newVertices = new float[visited.size()*3];
        int count = 0;
        for(Vector3f temp: visited){
-           newVertices[count] = temp.x;
+            newVertices[count] = temp.x;
+            count++;
+            newVertices[count] = temp.y;
+            count++;
+            newVertices[count] = temp.z;
+            count++;
+       }
+        short[] newColors = new short[colors.size()];
+       count = 0;
+       for(short color: colors){
+           newColors[count] = color;
            count++;
-           newVertices[count] = temp.y;
-           count++;
-           newVertices[count] = temp.z;
-           count++;
+
        }
        mesh.vertices = newVertices;
+       mesh.colors = newColors;
 
        return mesh;
     }
 
 
-    private static Object optimizeVertices(float[] vertices, int[] indices){
+    private static Object optimizeVertices(float[] vertices, int[] indices, short[] colors){
 
         LinkedList<Float> verticesList = new LinkedList<>();
         LinkedList<Integer> indicesList = new LinkedList<>();
+        LinkedList<Short> colorsList = new LinkedList<>();
         LinkedList<Integer> idc = new LinkedList<>();
 
         int count = 0;
@@ -205,6 +245,7 @@ public class Voxel {
                 verticesList.add(vertices[value*3+1]);
                 verticesList.add(vertices[value*3+2]);
                 idc.add(count);
+                colorsList.add(colors[value]);
                 count++;
             }else{
                 idc.add(indicesList.indexOf(value));
@@ -214,6 +255,7 @@ public class Voxel {
         Object temp = new Object();
         float[] tempVertices = new float[verticesList.size()];
         int[] tempIndices = new int[idc.size()];
+        short[] tempColors = new short[colorsList.size()];
         count = 0;
 
         for(float value : verticesList){
@@ -226,8 +268,16 @@ public class Voxel {
             tempIndices[count] = value;
             count++;
         }
+        count = 0;
+
+        for(short color : colorsList){
+            tempColors[count] = color;
+            count++;
+        }
+
         temp.vertices = tempVertices;
         temp.indices = tempIndices;
+        temp.colors = tempColors;
 
 
         return temp;
@@ -236,6 +286,7 @@ public class Voxel {
     static class Object{
         public float[] vertices;
         public int[] indices;
+        public short[] colors;
     }
 
     private static float[] interpVerts(float[] vertices, int[] indices, float[] data,float isolevel){
@@ -285,6 +336,54 @@ public class Voxel {
 
         }
         return vertices;
+    }
+
+    private static short[] interpColors(float[] vertices,int[] indices, short[] col){
+
+        short[] colors = new short[12];
+        for(int i=0; i < indices.length;i++){
+
+            if(indices[i] == 0){
+                colors[indices[i]] = vertices[indices[i]*3] > 0? col[1] : col[0];
+
+            }else if(indices[i] == 1){
+                colors[indices[i]] = vertices[indices[i]*3] > 0? col[1] : col[2];
+
+            }else if(indices[i] == 2){
+                colors[indices[i]] = vertices[indices[i]*3] > 0? col[2] : col[3];
+
+            }else if(indices[i] == 3){
+                colors[indices[i]] = vertices[indices[i]*3] > 0? col[0] : col[3];
+
+            }else if(indices[i] == 4){
+                colors[indices[i]] = vertices[indices[i]*3] > 0? col[5] : col[4];
+
+            }else if(indices[i] == 5){
+                colors[indices[i]] = vertices[indices[i]*3] > 0? col[5] : col[6];
+
+            }else if(indices[i] == 6){
+                colors[indices[i]] = vertices[indices[i]*3] > 0? col[6] : col[7];
+
+            }else if(indices[i] == 7){
+                colors[indices[i]] = vertices[indices[i]*3] > 0? col[4] : col[7];
+
+            }else if(indices[i] == 8){
+                colors[indices[i]] = vertices[indices[i]*3] > 0? col[4] : col[0];
+
+            }else if(indices[i] == 9){
+                colors[indices[i]] = vertices[indices[i]*3] > 0? col[5] : col[1];
+
+            }else if(indices[i] == 10){
+                colors[indices[i]] = vertices[indices[i]*3] > 0? col[6] : col[2];
+
+            }else if(indices[i] == 11){
+                colors[indices[i]] = vertices[indices[i]*3] > 0? col[7] : col[3];
+
+            }
+
+        }
+
+        return colors;
     }
 
     private static float getInterpCoord(float a, float b, float iso){

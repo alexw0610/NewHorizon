@@ -31,7 +31,9 @@ public class Render {
         gl.glEnableVertexAttribArray(1);
         gl.glEnableVertexAttribArray(2);
 
+
         gl.glDrawElements(gl.GL_TRIANGLES,count,gl.GL_UNSIGNED_INT,0);
+
 
         gl.glDisableVertexAttribArray(2);
         gl.glDisableVertexAttribArray(1);
@@ -49,13 +51,19 @@ public class Render {
         gl.glUniformMatrix4fv(loc,1,false,Transformation.getViewMatrix(camera),0);
         loc = gl.glGetUniformLocation(defaultShader.program, "projectionMatrix");
         gl.glUniformMatrix4fv(loc,1,false,Transformation.getProjectionMatrix(),0);
+        loc = gl.glGetUniformLocation(defaultShader.program, "camera");
+        gl.glUniform3f(loc,camera.getPosition().x,camera.getPosition().y,camera.getPosition().z);
 
         gl.glBindVertexArray(grid.vaoID);
         gl.glEnableVertexAttribArray(0);
         gl.glEnableVertexAttribArray(1);
+        gl.glEnableVertexAttribArray(2);
+
 
         gl.glDrawElements(gl.GL_LINES,grid.indices.length,gl.GL_UNSIGNED_INT,0);
 
+
+        gl.glDisableVertexAttribArray(2);
         gl.glDisableVertexAttribArray(1);
         gl.glDisableVertexAttribArray(0);
         gl.glBindVertexArray(0);
@@ -67,7 +75,7 @@ public class Render {
 
         gl.glClear(gl.GL_COLOR_BUFFER_BIT);
         gl.glClear(gl.GL_DEPTH_BUFFER_BIT);
-        gl.glClearColor(0.01f,0.01f,0.01f,0);
+        gl.glClearColor(0.01f,0.01f,0.03f,0);
 
     }
 

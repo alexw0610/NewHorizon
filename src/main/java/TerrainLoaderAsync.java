@@ -20,9 +20,9 @@ public class TerrainLoaderAsync implements Runnable{
 
     TerrainLoaderAsync(){
         this.position = new Vector3f(0,0,0);
-        this.planet = new Planet(123,1024);
+        this.planet = new Planet(123,128);
         this.meshes = new LinkedList<>();
-        this.tree = new Octree((short)1024);
+        this.tree = new Octree((short)128);
         t = new Thread(this,"TerrainGenerator");
         service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()/2);
         t.start();
