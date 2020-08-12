@@ -51,7 +51,7 @@ public class Grid {
             indices[i] = i;
         }
 
-        short[] colors = new short[3*1536];
+        float[] colors = new float[3*1536];
 
         for(int i = 0; i < 1536;i++){
             colors[i*3]      = i<512 ?  (short)1 : 0;

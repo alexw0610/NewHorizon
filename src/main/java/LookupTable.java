@@ -7,6 +7,7 @@ public class LookupTable {
             //left/right , up/down , front/back
 
             /*
+
                     |+y
                     |     /z+
                     |   /
@@ -15,7 +16,8 @@ public class LookupTable {
                   / |
                 /   |
               /     |
-            z-       |-y
+            z-      |-y
+
 
             */
 
@@ -297,6 +299,19 @@ public class LookupTable {
         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
     public static int CHUNKSIZE = 16;
+
+    public static int[] getAllIndices(){
+        int[] indices = new int[triTable.length*16];
+        int count = 0;
+        for(int i = 0;i<triTable.length;i++){
+            for(int x = 0;x<16;x++){
+                    indices[count] = triTable[i][x];
+                    count++;
+            }
+        }
+        System.out.println(count);
+        return indices;
+    }
 
     public static int[] getIndices(int index){
 

@@ -54,8 +54,7 @@ public class Octree {
         public LinkedList<Node> getParts(Vector3f position){
             LinkedList<Node> chunks = new LinkedList<>();
 
-            if(getDistance(position)>(((span*LookupTable.CHUNKSIZE)*Math.sqrt(3))/2)*2
-            ){
+            if(getDistance(position)>(((span*LookupTable.CHUNKSIZE)*Math.sqrt(3))/2)){
                 chunks.add(this);
                 return chunks;
             }else{

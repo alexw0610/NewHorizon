@@ -6,11 +6,13 @@ layout (location=2) in int color;
 
 out vec3 normals;
 out vec4 positionWorldSpace;
-out flat int vertexColor;
+out float vertexColor;
 
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 modelMatrix;
+uniform vec3 cameraPos;
+uniform float density;
 
 void main()
 {

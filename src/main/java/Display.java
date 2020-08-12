@@ -1,33 +1,32 @@
 package main.java;
 
 import com.jogamp.newt.event.KeyEvent;
-import com.jogamp.newt.event.KeyListener;
+
 import com.jogamp.newt.event.WindowAdapter;
 import com.jogamp.newt.event.WindowEvent;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.*;
 import com.jogamp.opengl.util.Animator;
-import org.joml.Math;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.IntBuffer;
 
-import java.util.BitSet;
-import java.util.LinkedList;
+
+public class Display implements GLEventListener {
 
 
-public class Display implements GLEventListener, KeyListener {
-
-
-    private BitSet keyStates = new BitSet(512);
     private Animator animator;
     private Camera camera;
 
-    private LinkedList<Mesh> meshList = new LinkedList<>();
+    private float frameDelta = 0;
 
-    private Mesh grid;
-    private float frameDelta;
-    private TerrainLoaderAsync terrainLoader;
-    long lastRequestMade = 0;
+
+    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
     Display(){
         setup();
     }
@@ -57,7 +56,7 @@ public class Display implements GLEventListener, KeyListener {
         });
 
         window.addGLEventListener(this);
-        window.addKeyListener(this);
+        window.addKeyListener(Simulation.getInstance().input);
         window.setSize((int)Settings.WIDTH, (int)Settings.HEIGHT);
         window.setTitle("New Horizon");
         window.setVisible(true);
@@ -69,46 +68,24 @@ public class Display implements GLEventListener, KeyListener {
 
 
     @Override
-    public void keyPressed(KeyEvent e) {
-        if(!e.isAutoRepeat()){
-            setKey(e.getKeyCode());
-        }
-    }
-
-    private void setKey(short code){
-        keyStates.set(code,true);
-
-    }
-
-    private void unsetKey(short code){
-        keyStates.set(code,false);
-    }
-
-    private boolean getKey(short code){
-        return keyStates.get(code);
-    }
-    @Override
-    public void keyReleased(KeyEvent e) {
-        if(!e.isAutoRepeat()){
-            unsetKey(e.getKeyCode());
-        }
-    }
-
-    @Override
     public void init(GLAutoDrawable drawable) {
         GL4 gl = drawable.getGL().getGL4();
         gl.glEnable(gl.GL_DEPTH_TEST);
         gl.glDepthFunc(gl.GL_LESS);
         gl.glEnable (gl.GL_BLEND);
         gl.glBlendFunc (gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
-        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
-        gl.glEnable(gl.GL_CULL_FACE);
-        gl.glCullFace(gl.GL_BACK);
-        terrainLoader = new TerrainLoaderAsync();
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINES);
+        //gl.glEnable(gl.GL_CULL_FACE);
+        //gl.glCullFace(gl.GL_BACK);
+
+        Planet test = new Planet(420,64);
+
+        RenderManager.getInstance().addPlanet(test);
         camera = new Camera();
-        grid = Grid.getGrid();
-        grid.type = MeshType.LINE;
-        grid.loadMesh();
+        RenderManager.getInstance().setCamera(camera);
+        Simulation.getInstance().init();
+        Simulation.getInstance().terrainLoader.requestTerrain(camera.getPosition());
+
 
 
     }
@@ -117,84 +94,40 @@ public class Display implements GLEventListener, KeyListener {
     public void dispose(GLAutoDrawable drawable) {
 
     }
+    private void readInput(){
+
+        try {
+            if(reader.ready()){
+                /*String command = reader.readLine();
+                if(!command.equals("")){
+
+                    String[] subcommands = command.split(" ");
+                    if(subcommands[0].equals("atmodensity") && subcommands.length == 2){
+
+                        camera.atmoDensity = Float.valueOf(subcommands[1]);
+                        System.out.println("Set density of atmosphere to: "+camera.atmoDensity);
+
+                    }
+                    else if(subcommands[0].equals("atmocolor") && subcommands.length == 4){
+
+                        camera.atmoColor = new Vector3f(Float.valueOf(subcommands[1]),Float.valueOf(subcommands[2]),Float.valueOf(subcommands[3]));
+                        System.out.println("Set color of atmosphere to: "+camera.atmoColor.x+" "+camera.atmoColor.y+" "+camera.atmoColor.z);
+
+                    }else{
+                        System.out.println("Unknown Command: "+command);
+                    }
+
+                }*/
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void update(){
 
-
-        float delta = -0.25f*frameDelta;
-        float viewDelta = -0.1f*frameDelta;
-
-
-        if(getKey(KeyEvent.VK_W)){
-            camera.movePosition(0,0,delta);
-        }
-        if(getKey(KeyEvent.VK_S)){
-            camera.movePosition(0,0,-delta);
-        }
-
-        if(getKey(KeyEvent.VK_A)){
-            camera.movePosition(-delta,0,0);
-        }
-        if(getKey(KeyEvent.VK_D)){
-            camera.movePosition(delta,0,0);
-        }
-
-        if(getKey(KeyEvent.VK_Q)){
-            camera.movePosition(0,delta,0);
-        }
-        if(getKey(KeyEvent.VK_E)){
-            camera.movePosition(0,-delta,0);
-        }
-
-                //ROTATION
-
-        if(getKey(KeyEvent.VK_LEFT)){
-            camera.getRotation().y -= viewDelta;
-        }
-        if(getKey(KeyEvent.VK_RIGHT)){
-            camera.getRotation().y += viewDelta;
-        }
-        if(getKey(KeyEvent.VK_UP)){
-            camera.getRotation().x -= viewDelta;
-        }
-        if(getKey(KeyEvent.VK_DOWN)){
-            camera.getRotation().x += viewDelta;
-        }
-
-                //DEBUG
-
-        if(getKey(KeyEvent.VK_R)){
-
-        }
-        if(getKey(KeyEvent.VK_T)){
-
-        }
-
-        Vector3i newChunk = new Vector3i((int)Math.floor(camera.getPosition().x/LookupTable.CHUNKSIZE),(int)Math.floor(camera.getPosition().y/LookupTable.CHUNKSIZE),(int)Math.floor(camera.getPosition().z/LookupTable.CHUNKSIZE));
-        Vector3f oldPosition = terrainLoader.getPosition();
-        Vector3i oldChunk = new Vector3i((int)Math.floor(oldPosition.x/LookupTable.CHUNKSIZE),(int)Math.floor(oldPosition.y/LookupTable.CHUNKSIZE),(int)Math.floor(oldPosition.z/LookupTable.CHUNKSIZE));
-        if(oldChunk.x != newChunk.x || oldChunk.y != newChunk.y || oldChunk.z != newChunk.z){
-
-            if(terrainLoader.requestTerrain(camera.getPosition())){
-                lastRequestMade = System.currentTimeMillis();
-            }
-        }
-        if(terrainLoader.hasUpdated()){
-            long update = System.currentTimeMillis();
-            for(Mesh mesh : meshList){
-                mesh.unloadMesh();
-
-            }
-            this.meshList = terrainLoader.getRequestedTerrain();
-            for(Mesh mesh : meshList){
-                mesh.loadMesh();
-
-            }
-            long current = System.currentTimeMillis();
-            System.out.println((current-update)/1000.0f+" seconds for uploading Terrain to gpu!");
-            System.out.println((current-lastRequestMade)/1000.0f+" seconds for updating Terrain!");
-        }
-
+        readInput();
+        Simulation.getInstance().update(frameDelta);
 
     }
 
@@ -207,11 +140,7 @@ public class Display implements GLEventListener, KeyListener {
 
         Render.clear(drawable);
 
-        for(Mesh mesh: meshList){
-            Render.draw(mesh,camera,drawable);
-        }
-        Render.drawAxisGrid(drawable,camera,grid);
-
+        Render.draw(drawable);
 
         while((System.currentTimeMillis()-start)/1000.0f < 0.01f){
             try {

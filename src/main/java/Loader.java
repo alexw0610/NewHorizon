@@ -51,7 +51,7 @@ public class Loader {
 
         //color buffer
 
-        ShortBuffer colorBuffer = ShortBuffer.allocate(mesh.colors.length);
+        FloatBuffer colorBuffer = FloatBuffer.allocate(mesh.colors.length);
         colorBuffer.put(mesh.colors);
         colorBuffer.flip();
 

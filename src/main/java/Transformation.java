@@ -13,14 +13,6 @@ public class Transformation {
     private static float[] projectionMatrixArr = new float[16];
     private static float[] modelMatrixArr = new float[16];
 
-    public static float[] getProjectionMatrix(){
-
-        float aspectRatio = Settings.WIDTH / Settings.HEIGHT;
-        projectionMatrix.identity().perspective((float)Math.toRadians(-45.0f), aspectRatio, 0.1f, 10000.0f);
-        projectionMatrix.get(projectionMatrixArr);
-
-        return projectionMatrixArr;
-    }
 
     public static float[] getModelMatrix(Vector3f position, Vector3f rotation){
 
@@ -35,16 +27,6 @@ public class Transformation {
         return modelMatrixArr;
     }
 
-    public static float[] getViewMatrix(Camera camera){
-
-        viewMatrix.identity().rotate((float) Math.toRadians(camera.getRotation().x), new Vector3f(1, 0, 0))
-                .rotate((float) Math.toRadians(camera.getRotation().y), new Vector3f(0, 1, 0));
-        viewMatrix.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
-
-        viewMatrix.get(viewMatrixArr);
-
-        return viewMatrixArr;
-    }
 
 
 }
