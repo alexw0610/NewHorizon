@@ -12,7 +12,7 @@ public class Octree {
     //Dimension is in Chunks
 
     public Octree(short dimension){
-        this.root = new Node((short)0,(short)0,(short)0,dimension,null);
+        this.root = new Node((short)0,(short)0,(short)0,dimension,null,"a");
     }
 
     public LinkedList<Node> searchChunk(Vector3f position){
@@ -36,7 +36,9 @@ public class Octree {
         short span;
         Node parent;
 
-        public Node(short indexX, short indexY, short indexZ, short span, Node parent){
+        String id;
+
+        public Node(short indexX, short indexY, short indexZ, short span, Node parent,String id){
 
             this.indexX = indexX;
             this.indexY = indexY;
@@ -49,27 +51,29 @@ public class Octree {
             isRoot = (parent == null);
             isLeaf = (span <= 1);
 
+            this.id = id;
+
         }
 
         public LinkedList<Node> getParts(Vector3f position){
             LinkedList<Node> chunks = new LinkedList<>();
 
-            if(getDistance(position)>(((span*LookupTable.CHUNKSIZE)*Math.sqrt(3))/2)){
+            if(getDistance(position)>(((span*LookupTable.CHUNKSIZE)*Math.sqrt(3))/3)){
                 chunks.add(this);
                 return chunks;
             }else{
                 if(!isLeaf){
                     Node[] children = new Node[8];
                     short childSpan = (short) (span/2);
-                    children[0]=(new Node(indexX,indexY,indexZ,childSpan,this));
-                    children[1]=(new Node((short)(indexX+childSpan),indexY,indexZ,childSpan,this));
-                    children[2]=(new Node(indexX,indexY, (short) (indexZ+childSpan),childSpan,this));
-                    children[3]=(new Node((short) (indexX+childSpan),indexY,(short)(indexZ+childSpan),childSpan,this));
+                    children[0]=(new Node(indexX,indexY,indexZ,childSpan,this,this.id+"a"));
+                    children[1]=(new Node((short)(indexX+childSpan),indexY,indexZ,childSpan,this,this.id+"b"));
+                    children[2]=(new Node(indexX,indexY, (short) (indexZ+childSpan),childSpan,this,this.id+"c"));
+                    children[3]=(new Node((short) (indexX+childSpan),indexY,(short)(indexZ+childSpan),childSpan,this,this.id+"d"));
 
-                    children[4]=(new Node(indexX,(short)(indexY+childSpan),indexZ,childSpan,this));
-                    children[5]=(new Node((short)(indexX+childSpan),(short)(indexY+childSpan),indexZ,childSpan,this));
-                    children[6]=(new Node(indexX,(short)(indexY+childSpan),(short)(indexZ+childSpan),childSpan,this));
-                    children[7]=(new Node((short)(indexX+childSpan),(short)(indexY+childSpan),(short)(indexZ+childSpan),childSpan,this));
+                    children[4]=(new Node(indexX,(short)(indexY+childSpan),indexZ,childSpan,this,this.id+"e"));
+                    children[5]=(new Node((short)(indexX+childSpan),(short)(indexY+childSpan),indexZ,childSpan,this,this.id+"f"));
+                    children[6]=(new Node(indexX,(short)(indexY+childSpan),(short)(indexZ+childSpan),childSpan,this,this.id+"g"));
+                    children[7]=(new Node((short)(indexX+childSpan),(short)(indexY+childSpan),(short)(indexZ+childSpan),childSpan,this,this.id+"h"));
 
                     for(Node child : children){
                         chunks.addAll(child.getParts(position));

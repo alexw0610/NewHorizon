@@ -422,6 +422,7 @@ public class Voxel {
             }
             LinkedList<Vector3f> triNormals = new LinkedList<>();
 
+
             for(Triangle tri: tris){
 
                 Vector3f e1 = new Vector3f(tri.a).sub(tri.b);

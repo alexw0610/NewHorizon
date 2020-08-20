@@ -14,6 +14,7 @@ public class Mesh {
     int[] indices;
     float[] normals;
     float[] colors;
+    String id;
 
     MeshType type = MeshType.TRIANGLE;
 

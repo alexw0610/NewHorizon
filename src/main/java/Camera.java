@@ -115,11 +115,12 @@ public class Camera {
         RenderManager rm = RenderManager.getInstance();
 
         Vector3i chunk = getChunk();
-        Mesh terrain = RenderManager.getInstance().getActivePlanets().get(0).getMesh(chunk.x,chunk.y,chunk.z,1);
+        //Mesh terrain = RenderManager.getInstance().getActivePlanets().get(0).getMesh(chunk.x,chunk.y,chunk.z,1);
 
         if(forwardMomentum!=0.0f){
-            Mesh.Collision collision = terrain.getRayIntersectionWithNormal(new Vector3f(this.position),new Vector3f(this.direction));
+            //Mesh.Collision collision = terrain.getRayIntersectionWithNormal(new Vector3f(this.position),new Vector3f(this.direction));
             Vector3f testPosition = new Vector3f(position).add(new Vector3f(direction).mul(forwardMomentum));
+            Mesh.Collision collision = null;
             if(collision != null){
                 if(collision.position.length() <  testPosition.length()){
                     this.forwardMomentum = 0.0f;
@@ -136,8 +137,9 @@ public class Camera {
             }
         }
         if(sideMomentum!=0.0f){
-            Vector3f intersection = terrain.getRayIntersection(new Vector3f(this.position),new Vector3f(this.side));
+            //Vector3f intersection = terrain.getRayIntersection(new Vector3f(this.position),new Vector3f(this.side));
             Vector3f testPosition = new Vector3f(position).add(new Vector3f(side).mul(sideMomentum));
+            Vector3f intersection = null;
             if(intersection != null){
                 if(intersection.length() <  testPosition.length()){
                     this.sideMomentum = 0.0f;
@@ -153,8 +155,9 @@ public class Camera {
             }
         }
         if(gravityMomentum!=0.0f){
-            Vector3f intersection = terrain.getRayIntersection(new Vector3f(this.position),new Vector3f(this.up).negate());
+            //Vector3f intersection = terrain.getRayIntersection(new Vector3f(this.position),new Vector3f(this.up).negate());
             Vector3f testPosition = new Vector3f(position).add(new Vector3f(up).negate().mul(gravityMomentum));
+            Vector3f intersection = null;
             if(intersection != null){
                 if(intersection.length() <  testPosition.length()){
                     this.gravityMomentum = 0.0f;

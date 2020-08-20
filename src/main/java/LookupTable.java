@@ -309,7 +309,6 @@ public class LookupTable {
                     count++;
             }
         }
-        System.out.println(count);
         return indices;
     }
 

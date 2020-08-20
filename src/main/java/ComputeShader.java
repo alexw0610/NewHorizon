@@ -94,8 +94,8 @@ public class ComputeShader {
         GL4 gl = GLContext.getCurrentGL().getGL4();
 
         IntBuffer log_length = IntBuffer.allocate(1);
-        ByteBuffer message = ByteBuffer.allocate(1024);
-        gl.glGetShaderInfoLog(shader, 1024, log_length, message);
+        ByteBuffer message = ByteBuffer.allocate(2048);
+        gl.glGetShaderInfoLog(shader, 2048, log_length, message);
         byte[] bytes = message.array();
         String output = new String( bytes, StandardCharsets.UTF_8);
         System.out.println(output);

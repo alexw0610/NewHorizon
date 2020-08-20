@@ -14,6 +14,9 @@ public class Planet {
     public Octree tree;
     private LinkedList<Mesh> currentMeshes = new LinkedList<>();
     private LinkedList<Mesh> updatedMeshes = new LinkedList<>();
+    private LinkedList<String> currentNodeIds = new LinkedList<>();
+    private LinkedList<String> fullNodeIds = new LinkedList<>();
+
     private boolean hasUpdated = false;
     public float atmoDensity = 0.003f;
     public Vector3f atmoColor = new Vector3f(0.1f,0.2f,0.5f);
@@ -71,22 +74,31 @@ public class Planet {
             float ore = (float)osn.noise((pos.x+offset*3)*0.003, (pos.y+offset*3)*0.003,(pos.z+offset*3)*0.003);
             float dist = mid.distance(pos);
             region = Math.max(region,0);
-            voxelData[i] = (float)radius*(float)LookupTable.CHUNKSIZE-dist;
+
+            voxelData[i] = value1*(3)*region+((float)radius*(float)LookupTable.CHUNKSIZE-dist)
+                    +value2*(5)*region;
             //voxelData[i] = pos.x < 3 ? pos.y < 3 ? pos.z < 3 ? 1 : 0 :0:0;
-
-
-
             //voxelColor[i] = ore < 0.0f ? (short)2 : 1 ;//0R 1G 2B
+
             voxelColor[i] = ore;
         }
         return new VoxelGroup(voxelData,voxelColor);
     }
 
-    public void setUpdatedMeshes(LinkedList<Mesh> meshes){
+    public void setUpdatedMeshes(LinkedList<Mesh> meshes, LinkedList<Octree.Node> fullNodeIds){
         if(!hasUpdated){
             synchronized (updatedMeshes){
-                this.updatedMeshes = (LinkedList<Mesh>)meshes.clone();
-                hasUpdated = true;
+                synchronized (this.fullNodeIds){
+                    this.updatedMeshes = (LinkedList<Mesh>)meshes.clone();
+                    this.fullNodeIds.clear();
+                    for(Octree.Node node : fullNodeIds){
+                        this.fullNodeIds.add(node.id);
+                    }
+
+
+                    hasUpdated = true;
+                }
+
             }
         }
 
@@ -98,15 +110,25 @@ public class Planet {
 
     public void updateMeshes(){
         if(hasUpdated){
+            long start = System.currentTimeMillis();
             if(!currentMeshes.isEmpty()){
-                for(Mesh mesh : this.currentMeshes){
-                    mesh.unloadMesh();
+                LinkedList<Mesh> tempList = new LinkedList<>();
+                for(Mesh mesh: this.currentMeshes){
+                    if(!this.fullNodeIds.contains(mesh.id)){
+                        mesh.unloadMesh();
+                        tempList.add(mesh);
+                    }
                 }
+                this.currentMeshes.removeAll(tempList);
+
             }
-            this.currentMeshes = (LinkedList<Mesh>) this.updatedMeshes.clone();
-            for(Mesh mesh : this.currentMeshes){
+            //this.currentMeshes = (LinkedList<Mesh>) this.updatedMeshes.clone();
+            for(Mesh mesh : this.updatedMeshes){
                 mesh.loadMesh();
+                this.currentMeshes.add(mesh);
             }
+            long end = System.currentTimeMillis();
+            System.out.println((end - start) / 1000.0f + " for updating all meshes! "+ Thread.currentThread());
             hasUpdated = false;
         }
     }
@@ -120,5 +142,18 @@ public class Planet {
             this.color = color;
         }
     }
+
+    public LinkedList<Octree.Node> filterExisting(LinkedList<Octree.Node> input){
+        input.removeIf(node -> this.currentNodeIds.contains(node.id));
+        return input;
+    }
+
+    public void setCurrentNodeIds(LinkedList<Octree.Node> input){
+        this.currentNodeIds.clear();
+        for(Octree.Node node : input){
+            this.currentNodeIds.add(node.id);
+        }
+    }
+
 
 }

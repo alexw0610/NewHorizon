@@ -1,10 +1,14 @@
 package main.java;
 
+import com.jogamp.newt.opengl.GLWindow;
+import com.jogamp.opengl.GLContext;
+
 import java.util.LinkedList;
 
 public class RenderManager {
     private static RenderManager instance = new RenderManager();
     private LinkedList<Planet> planetList = new LinkedList<>();
+    private GLContext context;
     private Camera activeCamera;
 
     private RenderManager(){}
@@ -23,7 +27,12 @@ public class RenderManager {
         }
 
     }
-
+    public void setContext(GLContext context){
+        this.context = context;
+    }
+    public GLContext getContext(){
+        return this.context;
+    }
     protected LinkedList<Planet> getActivePlanets(){
         return planetList;
     }

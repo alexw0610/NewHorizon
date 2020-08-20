@@ -2,6 +2,7 @@ package main.java;
 
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLContext;
 import org.joml.Vector3f;
 
 
@@ -31,7 +32,6 @@ public class Render {
 
     private static void draw(int vao,int count,GLAutoDrawable context){
         GL4 gl = context.getGL().getGL4();
-
         gl.glUseProgram(terrainShader.program);
 
 

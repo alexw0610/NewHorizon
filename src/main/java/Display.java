@@ -1,19 +1,14 @@
 package main.java;
 
-import com.jogamp.newt.event.KeyEvent;
-
 import com.jogamp.newt.event.WindowAdapter;
 import com.jogamp.newt.event.WindowEvent;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.*;
 import com.jogamp.opengl.util.Animator;
-import org.joml.Vector3f;
-import org.joml.Vector3i;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.IntBuffer;
+
 
 
 public class Display implements GLEventListener {
@@ -32,7 +27,7 @@ public class Display implements GLEventListener {
     }
 
     private void setup(){
-
+        System.out.println("setup");
         // Get the default OpenGL profile, reflecting the best for your running platform
         GLProfile glp = GLProfile.get("GL4");
         // Specifies a set of OpenGL capabilities, based on your profile.
@@ -59,9 +54,26 @@ public class Display implements GLEventListener {
         window.addKeyListener(Simulation.getInstance().input);
         window.setSize((int)Settings.WIDTH, (int)Settings.HEIGHT);
         window.setTitle("New Horizon");
-        window.setVisible(true);
         animator.setRunAsFastAsPossible(true);
         animator.start();  // start the animator loop
+        Planet test = new Planet(420,64);
+        RenderManager.getInstance().addPlanet(test);
+        camera = new Camera();
+        window.setVisible(true);
+
+        RenderManager.getInstance().setCamera(camera);
+
+        final GLAutoDrawable sharedDrawable = GLDrawableFactory.getFactory(glp).createDummyAutoDrawable(null, true, caps, null);
+        sharedDrawable.display(); // triggers GLContext object creation and native realization.
+
+
+        GLWindow glad = GLWindow.create(caps);
+        glad.setSharedAutoDrawable(sharedDrawable);
+        glad.setVisible(true);
+        glad.setVisible(false);
+        RenderManager.getInstance().setContext(glad.getContext());
+        Simulation.getInstance().init();
+        //Simulation.getInstance().terrainLoader.requestTerrain(camera.getPosition());
 
 
     }
@@ -69,30 +81,22 @@ public class Display implements GLEventListener {
 
     @Override
     public void init(GLAutoDrawable drawable) {
+        System.out.println("init");
         GL4 gl = drawable.getGL().getGL4();
         gl.glEnable(gl.GL_DEPTH_TEST);
         gl.glDepthFunc(gl.GL_LESS);
         gl.glEnable (gl.GL_BLEND);
         gl.glBlendFunc (gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
-        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINES);
-        //gl.glEnable(gl.GL_CULL_FACE);
-        //gl.glCullFace(gl.GL_BACK);
-
-        Planet test = new Planet(420,64);
-
-        RenderManager.getInstance().addPlanet(test);
-        camera = new Camera();
-        RenderManager.getInstance().setCamera(camera);
-        Simulation.getInstance().init();
-        Simulation.getInstance().terrainLoader.requestTerrain(camera.getPosition());
-
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
+        gl.glEnable(gl.GL_CULL_FACE);
+        gl.glCullFace(gl.GL_BACK);
 
 
     }
 
     @Override
     public void dispose(GLAutoDrawable drawable) {
-
+        System.out.println("dispose");
     }
     private void readInput(){
 
@@ -133,8 +137,10 @@ public class Display implements GLEventListener {
 
     @Override
     public void display(GLAutoDrawable drawable) {
+        if(RenderManager.getInstance().getContext() != null){
+            update();
+        }
 
-        update();
 
         long start = System.currentTimeMillis();
 

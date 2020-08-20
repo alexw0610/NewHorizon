@@ -16,7 +16,6 @@ public class Loader {
 
 
         GL4 gl = GLContext.getCurrentGL().getGL4();
-
         int[] vaoids = new int[1];
         gl.glGenVertexArrays(1,vaoids,0);
 
