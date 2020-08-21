@@ -16,6 +16,9 @@ public class Planet {
     private LinkedList<Mesh> updatedMeshes = new LinkedList<>();
     private LinkedList<String> currentNodeIds = new LinkedList<>();
     private LinkedList<String> fullNodeIds = new LinkedList<>();
+    private boolean nodeIdsUpdated = false;
+    private boolean fullNodeIdsUpdated = false;
+    private boolean cleaned = false;
 
     private boolean hasUpdated = false;
     public float atmoDensity = 0.003f;
@@ -53,6 +56,7 @@ public class Planet {
         float stretchMedium = 0.015f;
         float stretchSmall = 0.05f;
         float offset = 1231241.0f;
+        boolean isEmpty = true;
 
         for(int i = 0; i < cube;i++){
 
@@ -77,31 +81,22 @@ public class Planet {
 
             voxelData[i] = value1*(3)*region+((float)radius*(float)LookupTable.CHUNKSIZE-dist)
                     +value2*(5)*region;
+            if(isEmpty && voxelData[i] < LookupTable.ISOLEVEL){
+                isEmpty = false;
+            }
             //voxelData[i] = pos.x < 3 ? pos.y < 3 ? pos.z < 3 ? 1 : 0 :0:0;
             //voxelColor[i] = ore < 0.0f ? (short)2 : 1 ;//0R 1G 2B
 
             voxelColor[i] = ore;
         }
-        return new VoxelGroup(voxelData,voxelColor);
+        return new VoxelGroup(voxelData,voxelColor,isEmpty);
     }
 
-    public void setUpdatedMeshes(LinkedList<Mesh> meshes, LinkedList<Octree.Node> fullNodeIds){
-        if(!hasUpdated){
+    public void setUpdatedMesh(Mesh mesh){
             synchronized (updatedMeshes){
-                synchronized (this.fullNodeIds){
-                    this.updatedMeshes = (LinkedList<Mesh>)meshes.clone();
-                    this.fullNodeIds.clear();
-                    for(Octree.Node node : fullNodeIds){
-                        this.fullNodeIds.add(node.id);
-                    }
-
-
-                    hasUpdated = true;
-                }
-
+                this.updatedMeshes.add(mesh);
+                hasUpdated = true;
             }
-        }
-
     }
 
     public LinkedList<Mesh> getCurrentMeshes(){
@@ -109,8 +104,7 @@ public class Planet {
     }
 
     public void updateMeshes(){
-        if(hasUpdated){
-            long start = System.currentTimeMillis();
+        if(nodeIdsUpdated && fullNodeIdsUpdated && !cleaned){
             if(!currentMeshes.isEmpty()){
                 LinkedList<Mesh> tempList = new LinkedList<>();
                 for(Mesh mesh: this.currentMeshes){
@@ -120,15 +114,21 @@ public class Planet {
                     }
                 }
                 this.currentMeshes.removeAll(tempList);
-
             }
-            //this.currentMeshes = (LinkedList<Mesh>) this.updatedMeshes.clone();
-            for(Mesh mesh : this.updatedMeshes){
-                mesh.loadMesh();
-                this.currentMeshes.add(mesh);
+            cleaned = true;
+            nodeIdsUpdated = false;
+            fullNodeIdsUpdated = false;
+        }
+        if(hasUpdated){
+            synchronized(this.updatedMeshes){
+                LinkedList<Mesh> tempList = new LinkedList<>();
+                for(Mesh mesh : this.updatedMeshes){
+                    mesh.loadMesh();
+                    this.currentMeshes.add(mesh);
+                    tempList.add(mesh);
+                }
+                this.updatedMeshes.removeAll(tempList);
             }
-            long end = System.currentTimeMillis();
-            System.out.println((end - start) / 1000.0f + " for updating all meshes! "+ Thread.currentThread());
             hasUpdated = false;
         }
     }
@@ -136,10 +136,11 @@ public class Planet {
 
         float[] data;
         float[] color;
-
-        public VoxelGroup(float[] data, float[]color){
+        boolean empty;
+        public VoxelGroup(float[] data, float[]color,boolean empty){
             this.data = data;
             this.color = color;
+            this.empty = empty;
         }
     }
 
@@ -149,10 +150,27 @@ public class Planet {
     }
 
     public void setCurrentNodeIds(LinkedList<Octree.Node> input){
-        this.currentNodeIds.clear();
-        for(Octree.Node node : input){
-            this.currentNodeIds.add(node.id);
+        synchronized (currentNodeIds){
+            this.currentNodeIds.clear();
+            for(Octree.Node node : input){
+                this.currentNodeIds.add(node.id);
+            }
+            this.nodeIdsUpdated = true;
         }
+
+    }
+    public void setFullNodeIds(LinkedList<Octree.Node> input){
+        synchronized (fullNodeIds){
+            this.fullNodeIds.clear();
+            for(Octree.Node node : input){
+                this.fullNodeIds.add(node.id);
+            }
+            this.fullNodeIdsUpdated = true;
+        }
+
+    }
+    public void finishedChunk(){
+        this.cleaned = false;
     }
 
 

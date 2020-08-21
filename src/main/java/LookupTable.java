@@ -299,6 +299,7 @@ public class LookupTable {
         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
     public static int CHUNKSIZE = 16;
+    public static float ISOLEVEL = 0.5f;
 
     public static int[] getAllIndices(){
         int[] indices = new int[triTable.length*16];

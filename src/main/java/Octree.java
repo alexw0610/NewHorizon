@@ -3,6 +3,8 @@ import org.joml.Vector3f;
 import org.joml.Vector3i;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 
 public class Octree {
@@ -16,17 +18,20 @@ public class Octree {
     }
 
     public LinkedList<Node> searchChunk(Vector3f position){
-
-        return root.getParts(position);
-
+        LinkedList<Node> chunks = root.getParts(position);
+        Collections.sort(chunks, new Comparator<Node>() {
+            @Override
+            public int compare(Node n1, Node n2) {
+                return n2.id.length() - n1.id.length();
+            }
+        });
+        return chunks;
     }
-
 
     public class Node{
         boolean isRoot;
         boolean isLeaf;
 
-        //LinkedList<Node> children = new LinkedList<>();
         Node[] children;
 
         short indexX;
@@ -58,7 +63,7 @@ public class Octree {
         public LinkedList<Node> getParts(Vector3f position){
             LinkedList<Node> chunks = new LinkedList<>();
 
-            if(getDistance(position)>(((span*LookupTable.CHUNKSIZE)*Math.sqrt(3))/3)){
+            if(getDistance(position)>((this.span*LookupTable.CHUNKSIZE)*Math.sqrt(3))*0.2f){
                 chunks.add(this);
                 return chunks;
             }else{

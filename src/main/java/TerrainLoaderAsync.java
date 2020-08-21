@@ -9,7 +9,9 @@ import java.io.File;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.concurrent.*;
 
 public class TerrainLoaderAsync implements Runnable{
@@ -92,139 +94,157 @@ public class TerrainLoaderAsync implements Runnable{
 
                 System.out.println("update handling "+ Thread.currentThread());
                 for (Planet planet : renderManager.getActivePlanets()) {
-                    //setUpPersistentSSBO();
-                    LinkedList<Mesh> meshes = new LinkedList<>();
-                    LinkedList<Octree.Node> structOriginal = planet.tree.searchChunk(lastPositionGenerated);
-                    LinkedList<Octree.Node>struct = planet.filterExisting((LinkedList<Octree.Node>) structOriginal.clone());
                     long start = System.currentTimeMillis();
 
+                    LinkedList<Octree.Node> structOriginal = planet.tree.searchChunk(lastPositionGenerated);
+                    System.out.println(structOriginal.get(0).id);
+                    LinkedList<Octree.Node>struct = planet.filterExisting((LinkedList<Octree.Node>) structOriginal.clone());
+
+
+                    planet.setFullNodeIds(structOriginal);//List of all chunks that are needed.
+                    planet.setCurrentNodeIds(struct);//List of all the *new chunks* that will be added.
+
                     for (Octree.Node node : struct) {
-                        gl.glUseProgram(compute.program);
-                        //long passstart = System.currentTimeMillis();
-                        int[] ssbo = new int[10];
-                        gl.glGenBuffers(10, ssbo, 0);
 
                         Planet.VoxelGroup group = planet.getVoxelData(node.indexX, node.indexY, node.indexZ, node.span, node.span);
-                        FloatBuffer voxelBuffer = FloatBuffer.allocate(group.data.length);
-                        voxelBuffer.put(group.data);
-                        voxelBuffer.rewind();
 
-                        IntBuffer spanBuffer = IntBuffer.allocate(1);
-                        spanBuffer.put(node.span);
-                        spanBuffer.rewind();
+                        if(!group.empty) {
 
-                        //resolution in
-                        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[3]);
-                        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, 4, spanBuffer, gl.GL_STATIC_READ);
-                        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 3, ssbo[3]);
+                            gl.glUseProgram(compute.program);
+                            int[] ssbo = new int[10];
+                            gl.glGenBuffers(10, ssbo, 0);
 
-                        //voxelData in
-                        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[2]);
-                        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, (17 * 17 * 17) * 4, voxelBuffer, gl.GL_STATIC_READ);
-                        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 4, ssbo[2]);
+                            FloatBuffer voxelBuffer = FloatBuffer.allocate(group.data.length);
+                            voxelBuffer.put(group.data);
+                            voxelBuffer.rewind();
 
-                        //vertices out
-                        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[0]);
-                        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, ((36 * (16 * 16 * 16)) * 4), null, gl.GL_DYNAMIC_DRAW);
-                        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 5, ssbo[0]);
+                            IntBuffer spanBuffer = IntBuffer.allocate(1);
+                            spanBuffer.put(node.span);
+                            spanBuffer.rewind();
 
-                        //indices out
-                        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[1]);
-                        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, ((15 * (16 * 16 * 16)) * 4), null, gl.GL_DYNAMIC_DRAW);
-                        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 6, ssbo[1]);
+                            //resolution in
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[3]);
+                            gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, 4, spanBuffer, gl.GL_STATIC_READ);
+                            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 3, ssbo[3]);
 
-                        //normals out
-                        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[9]);
-                        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, ((36 * (16 * 16 * 16)) * 4), null, gl.GL_DYNAMIC_DRAW);
-                        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 7, ssbo[9]);
+                            //voxelData in
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[2]);
+                            gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, (17 * 17 * 17) * 4, voxelBuffer, gl.GL_STATIC_READ);
+                            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 4, ssbo[2]);
 
-                        //count out
-                        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[7]);
-                        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, (16*16*16)*4, null, gl.GL_DYNAMIC_DRAW);
-                        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 8, ssbo[7]);
-                        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER,0);
+                            //vertices out
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[0]);
+                            gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, ((36 * (16 * 16 * 16)) * 4), null, gl.GL_DYNAMIC_DRAW);
+                            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 5, ssbo[0]);
+
+                            //indices out
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[1]);
+                            gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, ((15 * (16 * 16 * 16)) * 4), null, gl.GL_DYNAMIC_DRAW);
+                            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 6, ssbo[1]);
+
+                            //normals out
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[9]);
+                            gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, ((36 * (16 * 16 * 16)) * 4), null, gl.GL_DYNAMIC_DRAW);
+                            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 7, ssbo[9]);
+
+                            //count out
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[7]);
+                            gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, (16 * 16 * 16) * 4, null, gl.GL_DYNAMIC_DRAW);
+                            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 8, ssbo[7]);
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, 0);
 
 
-                        gl.glDispatchCompute(16, 16, 16);
+                            gl.glDispatchCompute(16, 16, 16);
 
 
-                        gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT);
+                            gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT);
 
-                        IntBuffer indcount = IntBuffer.allocate(16 * 16 * 16);
-                        gl.glGetNamedBufferSubData(ssbo[7], 0, (16 * 16 * 16) * 4, indcount);
+                            IntBuffer indcount = IntBuffer.allocate(16 * 16 * 16);
+                            gl.glGetNamedBufferSubData(ssbo[7], 0, (16 * 16 * 16) * 4, indcount);
 
-                        int indSize = 0;
-                        int verSize = 0;
-                        int[] indCountArr = indcount.array();
+                            int indSize = 0;
+                            int verSize = 0;
+                            int[] indCountArr = indcount.array();
 
-                        for(int i = 0; i<indCountArr.length;i++){
-                            if(indCountArr[i] > 0){
-                                indSize += indCountArr[i];
-                                verSize += 1;
+                            for (int i = 0; i < indCountArr.length; i++) {
+                                if (indCountArr[i] > 0) {
+                                    indSize += indCountArr[i];
+                                    verSize += 1;
+                                }
                             }
-                        }
 
-                        gl.glUseProgram(repack.program);
+                            gl.glUseProgram(repack.program);
 
-                        //vertices in
-                        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[0]);
-                        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 5, ssbo[0]);
-                        //indices in
-                        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[1]);
-                        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 6, ssbo[1]);
-                        //normals in
-                        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[9]);
-                        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 7, ssbo[9]);
-                        //count in
-                        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[7]);
-                        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 8, ssbo[7]);
+                            //vertices in
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[0]);
+                            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 5, ssbo[0]);
+                            //indices in
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[1]);
+                            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 6, ssbo[1]);
+                            //normals in
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[9]);
+                            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 7, ssbo[9]);
+                            //count in
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[7]);
+                            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 8, ssbo[7]);
 
-                        //vert out
-                        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[5]);
-                        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, ((verSize*36) * 4), null, gl.GL_DYNAMIC_DRAW);
-                        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 9, ssbo[5]);
-                        //ind out
-                        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[6]);
-                        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, (indSize * 4), null, gl.GL_DYNAMIC_DRAW);
-                        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 10, ssbo[6]);
-                        //normal out
-                        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[8]);
-                        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, ((verSize*36) * 4), null, gl.GL_DYNAMIC_DRAW);
-                        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 11, ssbo[8]);
+                            //vert out
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[5]);
+                            gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, ((verSize * 36) * 4), null, gl.GL_DYNAMIC_DRAW);
+                            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 9, ssbo[5]);
+                            //ind out
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[6]);
+                            gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, (indSize * 4), null, gl.GL_DYNAMIC_DRAW);
+                            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 10, ssbo[6]);
+                            //normal out
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, ssbo[8]);
+                            gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, ((verSize * 36) * 4), null, gl.GL_DYNAMIC_DRAW);
+                            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 11, ssbo[8]);
 
-                        gl.glDispatchCompute(1, 1, 1);
+                            gl.glDispatchCompute(1, 1, 1);
 
-                        gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT);
+                            gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT);
 
-                        FloatBuffer vertbuffer = FloatBuffer.allocate((verSize*36));
-                        gl.glGetNamedBufferSubData(ssbo[5], 0, ((verSize*36) * 4), vertbuffer);
+                            FloatBuffer vertbuffer = FloatBuffer.allocate((verSize * 36));
+                            gl.glGetNamedBufferSubData(ssbo[5], 0, ((verSize * 36) * 4), vertbuffer);
 
-                        IntBuffer indbuffer = IntBuffer.allocate((indSize));
-                        gl.glGetNamedBufferSubData(ssbo[6], 0, (indSize * 4), indbuffer);
+                            IntBuffer indbuffer = IntBuffer.allocate((indSize));
+                            gl.glGetNamedBufferSubData(ssbo[6], 0, (indSize * 4), indbuffer);
 
-                        FloatBuffer normalBuffer = FloatBuffer.allocate((verSize*36));
-                        gl.glGetNamedBufferSubData(ssbo[8], 0, (verSize*36)*4, normalBuffer);
+                            FloatBuffer normalBuffer = FloatBuffer.allocate((verSize * 36));
+                            gl.glGetNamedBufferSubData(ssbo[8], 0, (verSize * 36) * 4, normalBuffer);
 
 
-                        if(vertbuffer.array().length > 0 && indbuffer.array().length > 0 && normalBuffer.array().length > 0){
+                            if (vertbuffer.array().length > 0 && indbuffer.array().length > 0 && normalBuffer.array().length > 0) {
 
-                            Mesh mesh = new Mesh(vertbuffer.array(), indbuffer.array(), normalBuffer.array(), new Vector3f(
-                                    node.indexX * LookupTable.CHUNKSIZE,
-                                    node.indexY * LookupTable.CHUNKSIZE,
-                                    node.indexZ * LookupTable.CHUNKSIZE)
-                            );
-                            mesh.id = node.id;
-                            meshes.add(mesh);
+                                Mesh mesh = new Mesh(vertbuffer.array(), indbuffer.array(), normalBuffer.array(), new Vector3f(
+                                        node.indexX * LookupTable.CHUNKSIZE,
+                                        node.indexY * LookupTable.CHUNKSIZE,
+                                        node.indexZ * LookupTable.CHUNKSIZE)
+                                );
+                                mesh.id = node.id;
+                                planet.setUpdatedMesh(mesh);
+
+
+                            }
                         }
 
                     }
 
+                    planet.finishedChunk();
                     long end = System.currentTimeMillis();
                     System.out.println((end - start) / 1000.0f + " for adding all chunks! "+ Thread.currentThread());
-
-                    planet.setCurrentNodeIds(struct);
-                    planet.setUpdatedMeshes(meshes,structOriginal);
-
+                    Map<Integer,Integer> detail = new LinkedHashMap<>();
+                    for(Octree.Node node :structOriginal){
+                        if(detail.containsKey(node.id.length())){
+                            detail.put(node.id.length(), detail.get(node.id.length())+1);
+                        }else{
+                            detail.put(node.id.length(), 1);
+                        }
+                    }
+                    for(Integer key : detail.keySet()){
+                        System.out.println("Detail "+key+" : "+detail.get(key)+" Chunks");
+                    }
 
                 }
                 updateRequest = false;

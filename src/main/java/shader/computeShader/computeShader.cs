@@ -21,8 +21,7 @@ layout(std140, binding = 3) buffer spanIn
 };
 
 //output
-layout(std430
-, binding = 5) buffer verticesOut
+layout(std430, binding = 5) buffer verticesOut
 {
     float vertices[];
 };
@@ -129,8 +128,8 @@ void writeNormals(int offset,int count){
 
         vec3 e1 = pointA - pointB;
         vec3 e2 = pointA - pointC;
-        vec3 normal = cross(normalize(e1),normalize(e2));
-        //normal = normalize(normal);
+        vec3 normal = cross(e1,e2);
+        normal = normalize(normal);
 
 
         normals[offset*36+(indices[offset*15+i*3]*3)] = (normal.x);

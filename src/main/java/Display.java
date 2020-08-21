@@ -60,15 +60,10 @@ public class Display implements GLEventListener {
         RenderManager.getInstance().addPlanet(test);
         camera = new Camera();
         window.setVisible(true);
-
         RenderManager.getInstance().setCamera(camera);
-
         final GLAutoDrawable sharedDrawable = GLDrawableFactory.getFactory(glp).createDummyAutoDrawable(null, true, caps, null);
         sharedDrawable.display(); // triggers GLContext object creation and native realization.
-
-
         GLWindow glad = GLWindow.create(caps);
-        glad.setSharedAutoDrawable(sharedDrawable);
         glad.setVisible(true);
         glad.setVisible(false);
         RenderManager.getInstance().setContext(glad.getContext());

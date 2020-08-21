@@ -17,8 +17,6 @@ public class ComputeShader {
     public int program;
     int cs;
 
-    //private final Map<String, Integer> uniforms;
-
     public ComputeShader(File file){
         GL4 gl = GLContext.getCurrentGL().getGL4();
 
