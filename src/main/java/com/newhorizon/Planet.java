@@ -1,7 +1,6 @@
 package com.newhorizon;
 
 import com.newhorizon.noise.OpenSimplexNoise;
-import org.joml.Vector3d;
 import org.joml.Vector3f;
 
 import java.util.LinkedList;
