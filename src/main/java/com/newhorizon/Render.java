@@ -1,8 +1,7 @@
-package main.java;
+package com.newhorizon;
 
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.GLAutoDrawable;
-import com.jogamp.opengl.GLContext;
 import org.joml.Vector3f;
 
 
@@ -11,22 +10,31 @@ import java.io.File;
 
 public class Render {
 
-    private static Shader terrainShader = new Shader(new File("src\\main\\java\\shader\\terrain.vs"));
-    private static Shader defaultShader = new Shader(new File("src\\main\\java\\shader\\shader.vs"));
+    public boolean wireframe = false;
+
+    private static Shader terrainShader = new Shader("terrain",Render.class.getResourceAsStream("/shader/terrain.vs"));
+    private static Shader defaultShader = new Shader("shader",Render.class.getResourceAsStream("/shader/shader.vs"));
 
     public static void draw(GLAutoDrawable context){
         GL4 gl = context.getGL().getGL4();
 
         RenderManager renderManager = RenderManager.getInstance();
         gl.glUseProgram(terrainShader.program);
+
         for(Planet planet : renderManager.getActivePlanets()){
             planet.updateMeshes();
+            if(planet.wireframe){
+                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
+            }else{
+                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
+            }
             for(Mesh mesh : planet.getCurrentMeshes()){
                 setupUniforms(mesh,planet,renderManager.getActiveCamera(), context);
                 draw(mesh.vaoID,mesh.indices.length,context);
             }
 
         }
+
 
     }
 
@@ -57,7 +65,7 @@ public class Render {
 
         gl.glClear(gl.GL_COLOR_BUFFER_BIT);
         gl.glClear(gl.GL_DEPTH_BUFFER_BIT);
-        gl.glClearColor(0.8f,0.8f,0.8f,0);
+        gl.glClearColor(0.95f,0.85f,1.0f,0);
 
     }
 

@@ -1,8 +1,9 @@
-package main.java;
+package com.newhorizon;
 
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.GLContext;
 
+import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
@@ -12,7 +13,7 @@ import java.util.Arrays;
 public class Loader {
 
 
-    public static int loadToGPU(Mesh mesh){
+    public static BufferObject loadToGPU(Mesh mesh){
 
 
         GL4 gl = GLContext.getCurrentGL().getGL4();
@@ -76,15 +77,26 @@ public class Loader {
         //gl.glBindBuffer(gl.GL_ARRAY_BUFFER,0);
         gl.glBindVertexArray(0);
 
+        BufferObject bo = new BufferObject(vaoids[0],vboids);
 
-        return vaoids[0];
+
+        return bo;
 
     }
 
+    public static class BufferObject{
+        int vaoID;
+        int[] vboID;
+        public BufferObject(int vaoID,int[]vboID){
+            this.vaoID = vaoID;
+            this.vboID = vboID;
+        }
+    }
     public static void unload(Mesh mesh){
 
         GL4 gl = GLContext.getCurrentGL().getGL4();
         gl.glDeleteVertexArrays(1,new int[]{mesh.vaoID},0);
+        gl.glDeleteBuffers(4, mesh.vboID, 0);
     }
 
 }

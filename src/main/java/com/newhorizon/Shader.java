@@ -1,13 +1,10 @@
-package main.java;
+package com.newhorizon;
 
 
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.GLContext;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.charset.StandardCharsets;
@@ -23,11 +20,12 @@ public class Shader {
     int fs;
     private final Map<String, Integer> uniforms;
 
-    public Shader(File file){
+    public Shader(String name, InputStream file){
 
         GL4 gl = GLContext.getCurrentGL().getGL4();
-        String[] temp = file.getName().split("\\.");
-        name = temp[0];
+        //String[] temp = file.getName().split("\\.");
+        //name = temp[0];
+        this.name = name;
         program = gl.glCreateProgram();
         if(!gl.glIsProgram(program)){
             System.err.println("Could not create test.Shader Program");
@@ -38,7 +36,7 @@ public class Shader {
         //Vertex test.Shader
         vs = gl.glCreateShader(gl.GL_VERTEX_SHADER);
 
-        String[] content = new String[]{readfile(file)};
+        String[] content = new String[]{readfile(new InputStreamReader(file))};
 
         gl.glShaderSource(vs,1,content,null);
         gl.glCompileShader(vs);
@@ -46,16 +44,17 @@ public class Shader {
         IntBuffer status = IntBuffer.allocate(1);
         gl.glGetShaderiv(vs,gl.GL_COMPILE_STATUS,status);
         if(status.get() == gl.GL_FALSE){
-            System.err.println("Could not compile Vertex shader: " + name);
+            System.err.println("Could not compile Vertex com.newhorizon.shader: " + name);
             printErrLog(vs);
             System.exit(1);
         }
 
         //Fragment test.Shader
         fs = gl.glCreateShader(gl.GL_FRAGMENT_SHADER);
-        String fname = file.getParentFile().getAbsolutePath()+"\\"+temp[0]+".fs";
-        File fsfile = new File(fname);
-        content = new String[]{readfile(fsfile)};
+        //String fname = file.getParentFile().getAbsolutePath()+"\\"+temp[0]+".fs";
+        //File fsfile = new File(fname);
+        InputStream fragInput = this.getClass().getResourceAsStream("/shader/"+this.name+".fs");
+        content = new String[]{readfile(new InputStreamReader(fragInput))};
 
         gl.glShaderSource(fs, 1,content,null);
         gl.glCompileShader(fs);
@@ -63,7 +62,7 @@ public class Shader {
         status = IntBuffer.allocate(1);
         gl.glGetShaderiv(fs,gl.GL_COMPILE_STATUS,status);
         if(status.get() == gl.GL_FALSE){
-            System.err.println("Could not compile Fragment shader: " + name);
+            System.err.println("Could not compile Fragment com.newhorizon.shader: " + name);
             printErrLog(fs);
             System.exit(1);
         }
@@ -100,11 +99,11 @@ public class Shader {
 
     }
 
-    private String readfile(File file){
+    private String readfile(InputStreamReader file){
         StringBuilder shadercode = new StringBuilder();
         BufferedReader br;
         try{
-            br = new BufferedReader(new FileReader(file));
+            br = new BufferedReader(file);
             String line;
             while((line = br.readLine()) != null){
                 shadercode.append(line);

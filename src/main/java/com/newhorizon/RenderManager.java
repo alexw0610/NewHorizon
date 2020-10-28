@@ -1,6 +1,5 @@
-package main.java;
+package com.newhorizon;
 
-import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.GLContext;
 
 import java.util.LinkedList;

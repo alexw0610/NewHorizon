@@ -1,4 +1,4 @@
-package main.java;
+package com.newhorizon;
 
 
 import org.joml.Vector3f;

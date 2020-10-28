@@ -1,10 +1,12 @@
-package main.java;
+package com.newhorizon;
 
 
-
+import com.newhorizon.util.Chunkify;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
+
+import java.util.LinkedList;
 
 
 public class Camera {
@@ -27,7 +29,7 @@ public class Camera {
 
     public Camera(){
 
-        position = new Vector3f(1,1,1);
+        position = new Vector3f(310,310,310);
         direction = new Vector3f(0,1,0);
         up = new Vector3f(0,0,1);
         side = new Vector3f(1,0,0);
@@ -64,10 +66,34 @@ public class Camera {
         viewMatrix.lookAt(new Vector3f(position),new Vector3f(position).add(new Vector3f(direction).mul(2.0f)),new Vector3f(up));
         viewMatrix.get(viewMatrixArr);
 
+
     }
 
     public float[] getViewMatrix(){
         return viewMatrixArr;
+    }
+
+    public void addMomentumVector(Vector3f vector){
+
+        Vector3f forward = new Vector3f(this.direction);
+        Vector3f sideward = new Vector3f(this.side);
+        Vector3f upward = new Vector3f(this.up);
+
+        Vector3f target = new Vector3f(0,0,0);
+
+        target.x = forward.dot(vector);
+        target.y = sideward.dot(vector);
+        target.z = upward.dot(vector);
+        target.normalize();
+
+        //addMomentum(target.x,target.y,target.z);
+        //addMomentum(target.x,target.z,target.y);
+        //addMomentum(target.y,target.x,target.z);
+        addMomentum(target.y,target.z*-1.0f,target.x);
+        //addMomentum(target.z,target.y,target.x);
+        //addMomentum(target.z,target.x,target.y);
+
+
     }
 
     public void addMomentum(float deltaX, float deltaY, float deltaZ) {
@@ -82,9 +108,7 @@ public class Camera {
             gravityMomentum += deltaY;
         }
 
-
     }
-
 
     public void rotate(float deltaX, float deltaY, float deltaZ){
 
@@ -101,76 +125,80 @@ public class Camera {
             up.rotateAxis((float)Math.toRadians(deltaZ),direction.x,direction.y,direction.z);
         }
 
-        ;
-
         normalize();
-
-
         updateViewMatrix();
 
     }
 
     public void applyMomentum(){
 
-        RenderManager rm = RenderManager.getInstance();
+        Vector3f testPosition = new Vector3f(0,0,0);
+        float buffer = 2.0f;
+        boolean prematureCollision = false;
+
+        Vector3f forward = new Vector3f(this.direction).mul(forwardMomentum);
+        Vector3f sideward = new Vector3f(this.side).mul(sideMomentum);
+        Vector3f upward = new Vector3f(this.up).negate().mul(gravityMomentum);
+
+        testPosition.add(forward).add(sideward).add(upward);
 
         Vector3i chunk = getChunk();
-        //Mesh terrain = RenderManager.getInstance().getActivePlanets().get(0).getMesh(chunk.x,chunk.y,chunk.z,1);
+        LinkedList<Mesh> terrainList = RenderManager.getInstance().getActivePlanets().get(0).getCurrentMeshes();
+        LinkedList<Mesh> meshList = new LinkedList<>();
+        for(Mesh mesh : terrainList){
+            for(short x = -1 ; x < 2;x++){
+                for(short y = -1 ; y < 2;y++){
+                    for(short z = -1 ; z < 2;z++){
+                        if(mesh.position.equals(((float)chunk.x+x)*LookupTable.CHUNKSIZE,((float)chunk.y+y)*LookupTable.CHUNKSIZE,((float)chunk.z+z)*LookupTable.CHUNKSIZE)){
+                            meshList.add(mesh);
+                        }
+                    }
+                }
+            }
+        }
 
-        if(forwardMomentum!=0.0f){
-            //Mesh.Collision collision = terrain.getRayIntersectionWithNormal(new Vector3f(this.position),new Vector3f(this.direction));
-            Vector3f testPosition = new Vector3f(position).add(new Vector3f(direction).mul(forwardMomentum));
+        if(!testPosition.equals(0,0,0)){
             Mesh.Collision collision = null;
+            if(!meshList.isEmpty()){
+                for(Mesh mesh : meshList){
+                    collision = mesh.getRayIntersectionWithNormal(new Vector3f(this.position),new Vector3f(testPosition));
+                    if(collision != null){
+                        break;
+                    }
+                }
+            }
+
             if(collision != null){
-                if(collision.position.length() <  testPosition.length()){
+                Vector3f temp = new Vector3f(testPosition).mul(collision.distance);
+                if(temp.length() < testPosition.length()*buffer){
                     this.forwardMomentum = 0.0f;
-                    System.out.println(collision.normal.x+" "+collision.normal.y+" "+collision.normal.z);
+                    this.sideMomentum = 0.0f;
+                    this.gravityMomentum = 0.0f;
+                    System.out.println("collision");
+                    if(collision.normal.dot(testPosition)>0){
+                        collision.normal = collision.normal.mul(-1.0f);
+                    }
+                    addMomentumVector(collision.normal);
                 }else {
-                    this.position.add(new Vector3f(direction).mul(forwardMomentum));
+                    this.position.add(new Vector3f(testPosition));
                 }
             }else{
-                this.position.add(new Vector3f(direction).mul(forwardMomentum));
+                this.position.add(new Vector3f(testPosition));
             }
             forwardMomentum = forwardMomentum*0.75f;
+            sideMomentum = sideMomentum*0.75f;
+            gravityMomentum = gravityMomentum*0.75f;
+
             if(Math.abs(forwardMomentum) < 0.0001f){
                 forwardMomentum = 0.0f;
             }
-        }
-        if(sideMomentum!=0.0f){
-            //Vector3f intersection = terrain.getRayIntersection(new Vector3f(this.position),new Vector3f(this.side));
-            Vector3f testPosition = new Vector3f(position).add(new Vector3f(side).mul(sideMomentum));
-            Vector3f intersection = null;
-            if(intersection != null){
-                if(intersection.length() <  testPosition.length()){
-                    this.sideMomentum = 0.0f;
-                }else {
-                    this.position.add(new Vector3f(side).mul(sideMomentum));
-                }
-            }else{
-                this.position.add(new Vector3f(side).mul(sideMomentum));
-            }
-            sideMomentum = sideMomentum*0.75f;
             if(Math.abs(sideMomentum) < 0.0001f){
                 sideMomentum = 0.0f;
             }
-        }
-        if(gravityMomentum!=0.0f){
-            //Vector3f intersection = terrain.getRayIntersection(new Vector3f(this.position),new Vector3f(this.up).negate());
-            Vector3f testPosition = new Vector3f(position).add(new Vector3f(up).negate().mul(gravityMomentum));
-            Vector3f intersection = null;
-            if(intersection != null){
-                if(intersection.length() <  testPosition.length()){
-                    this.gravityMomentum = 0.0f;
-                }else {
-                    this.position.add(new Vector3f(up).mul(gravityMomentum));
-                }
-            }else{
-                this.position.add(new Vector3f(up).mul(gravityMomentum));
-            }
-            gravityMomentum = gravityMomentum*0.75f;
             if(Math.abs(gravityMomentum) < 0.0001f){
                 gravityMomentum = 0.0f;
             }
+
 
         }
 

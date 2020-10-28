@@ -1,4 +1,4 @@
-package main.java;
+package com.newhorizon;
 
 import com.jogamp.newt.event.KeyEvent;
 import com.jogamp.newt.event.KeyListener;
@@ -11,6 +11,10 @@ public class Input implements KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if(e.getKeyCode() == KeyEvent.VK_H){
+            System.out.println("h");
+            RenderManager.getInstance().getActivePlanets().get(0).wireframe = !RenderManager.getInstance().getActivePlanets().get(0).wireframe;
+        }
         if(!e.isAutoRepeat()){
             setKey(e.getKeyCode(),true);
         }

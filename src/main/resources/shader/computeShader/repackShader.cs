@@ -40,29 +40,24 @@ void main(){
     int counter = 0;
     int indOffset = 0;
     int vertOffset = 0;
-    int normalOffset = 0;
+
 
     for(int i = 0; i < countInput.length();i++){
         int amount = countInput[i];
         if(amount > 0){
             int indOffsetTemp = 0;
             int vertOffsetTemp = 0;
-            int normalOffsetTemp = 0;
             for(int items = 0; items < amount; items++){
                 indicesOutput[indOffset+items] = indicesInput[items+i*15]+counter*12;
                 indOffsetTemp++;
             }
             for(int verts = 0; verts < 36; verts++){
                 verticesOutput[vertOffset+verts] = verticesInput[verts+i*36];
+                normalsOutput[vertOffset+verts] = normalsInput[verts+i*36];
                 vertOffsetTemp++;
-            }
-            for(int normals = 0; normals < 36; normals++){
-                normalsOutput[normalOffset+normals] = normalsInput[normals+i*36];
-                normalOffsetTemp++;
             }
             indOffset += indOffsetTemp;
             vertOffset += vertOffsetTemp;
-            normalOffset += normalOffsetTemp;
             counter++;
         }
     }

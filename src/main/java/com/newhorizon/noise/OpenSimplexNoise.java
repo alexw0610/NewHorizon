@@ -1,4 +1,4 @@
-package main.java.noise;
+package com.newhorizon.noise;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -9,7 +9,7 @@ import javax.imageio.ImageIO;
 
 
 /*
- * A speed-improved simplex noise algorithm for 2D, 3D and 4D in Java.
+ * A speed-improved simplex com.newhorizon.noise algorithm for 2D, 3D and 4D in Java.
  *
  * Based on example code by Stefan Gustavson (stegu@itn.liu.se).
  * Optimisations by Peter Eastman (peastman@drizzle.stanford.edu).
@@ -25,7 +25,7 @@ import javax.imageio.ImageIO;
  *
  */
 
-public class OpenSimplexNoise {  // Simplex noise in 2D, 3D and 4D
+public class OpenSimplexNoise {  // Simplex com.newhorizon.noise in 2D, 3D and 4D
 
     public static int RANDOMSEED=0;
     private static int NUMBEROFSWAPS=400;
@@ -117,7 +117,7 @@ public class OpenSimplexNoise {  // Simplex noise in 2D, 3D and 4D
         return g.x*x + g.y*y + g.z*z + g.w*w; }
 
 
-    // 2D simplex noise
+    // 2D simplex com.newhorizon.noise
     public double noise(double xin, double yin) {
         double n0, n1, n2; // Noise contributions from the three corners
         // Skew the input space to determine which simplex cell we're in
@@ -166,13 +166,13 @@ public class OpenSimplexNoise {  // Simplex noise in 2D, 3D and 4D
             t2 *= t2;
             n2 = t2 * t2 * dot(grad3[gi2], x2, y2);
         }
-        // Add contributions from each corner to get the final noise value.
+        // Add contributions from each corner to get the final com.newhorizon.noise value.
         // The result is scaled to return values in the interval [-1,1].
         return 70.0 * (n0 + n1 + n2);
     }
 
 
-    // 3D simplex noise
+    // 3D simplex com.newhorizon.noise
     public double noise(double xin, double yin, double zin) {
         double n0, n1, n2, n3; // Noise contributions from the four corners
         // Skew the input space to determine which simplex cell we're in
@@ -248,7 +248,7 @@ public class OpenSimplexNoise {  // Simplex noise in 2D, 3D and 4D
             t3 *= t3;
             n3 = t3 * t3 * dot(grad3[gi3], x3, y3, z3);
         }
-        // Add contributions from each corner to get the final noise value.
+        // Add contributions from each corner to get the final com.newhorizon.noise value.
         // The result is scaled to stay just inside [-1,1]
         return 32.0*(n0 + n1 + n2 + n3);
     }

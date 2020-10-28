@@ -1,4 +1,4 @@
-package main.java;
+package com.newhorizon;
 
 
 import java.lang.Math;
@@ -12,7 +12,7 @@ public class Voxel {
 
     public static Mesh getMesh(float[] voxelData,float[] voxelColor, int resolution, int chunkX, int chunkY, int chunkZ){
         Mesh temp = createMeshes(voxelData,voxelColor,(int)Math.cbrt(voxelData.length),0.5f,resolution);
-        //entry point for compute shader (voxelData, indicesLookup, verticesLookup, resolution)
+        //entry point for compute com.newhorizon.shader (voxelData, indicesLookup, verticesLookup, resolution)
         temp.position = new Vector3f(chunkX*LookupTable.CHUNKSIZE,chunkY*LookupTable.CHUNKSIZE,chunkZ*LookupTable.CHUNKSIZE);
         return temp;
 
@@ -404,8 +404,6 @@ public class Voxel {
     private static float[] createNormals(float[] vertices, int[] indices){
 
         float[] normals = new float[vertices.length];
-
-
         for(int vertPos = 0; vertPos < vertices.length;vertPos += 3){
 
             LinkedList<Triangle> tris = new LinkedList<>();

@@ -1,4 +1,4 @@
-package main.java;
+package com.newhorizon;
 
 import com.jogamp.newt.event.WindowAdapter;
 import com.jogamp.newt.event.WindowEvent;
@@ -54,22 +54,22 @@ public class Display implements GLEventListener {
         window.addKeyListener(Simulation.getInstance().input);
         window.setSize((int)Settings.WIDTH, (int)Settings.HEIGHT);
         window.setTitle("New Horizon");
-        animator.setRunAsFastAsPossible(true);
-        animator.start();  // start the animator loop
-        Planet test = new Planet(420,64);
-        RenderManager.getInstance().addPlanet(test);
-        camera = new Camera();
-        window.setVisible(true);
-        RenderManager.getInstance().setCamera(camera);
         final GLAutoDrawable sharedDrawable = GLDrawableFactory.getFactory(glp).createDummyAutoDrawable(null, true, caps, null);
         sharedDrawable.display(); // triggers GLContext object creation and native realization.
         GLWindow glad = GLWindow.create(caps);
         glad.setVisible(true);
         glad.setVisible(false);
+        animator.setRunAsFastAsPossible(true);
+        animator.start();  // start the animator loop
+        Planet test = new Planet(233,128);
+        RenderManager.getInstance().addPlanet(test);
+        camera = new Camera();
+        RenderManager.getInstance().setCamera(camera);
         RenderManager.getInstance().setContext(glad.getContext());
         Simulation.getInstance().init();
-        //Simulation.getInstance().terrainLoader.requestTerrain(camera.getPosition());
-
+        window.setVisible(true);
+        window.setSize(1,1);
+        window.setSize((int)Settings.WIDTH, (int)Settings.HEIGHT);
 
     }
 
@@ -93,39 +93,9 @@ public class Display implements GLEventListener {
     public void dispose(GLAutoDrawable drawable) {
         System.out.println("dispose");
     }
-    private void readInput(){
-
-        try {
-            if(reader.ready()){
-                /*String command = reader.readLine();
-                if(!command.equals("")){
-
-                    String[] subcommands = command.split(" ");
-                    if(subcommands[0].equals("atmodensity") && subcommands.length == 2){
-
-                        camera.atmoDensity = Float.valueOf(subcommands[1]);
-                        System.out.println("Set density of atmosphere to: "+camera.atmoDensity);
-
-                    }
-                    else if(subcommands[0].equals("atmocolor") && subcommands.length == 4){
-
-                        camera.atmoColor = new Vector3f(Float.valueOf(subcommands[1]),Float.valueOf(subcommands[2]),Float.valueOf(subcommands[3]));
-                        System.out.println("Set color of atmosphere to: "+camera.atmoColor.x+" "+camera.atmoColor.y+" "+camera.atmoColor.z);
-
-                    }else{
-                        System.out.println("Unknown Command: "+command);
-                    }
-
-                }*/
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     private void update(){
 
-        readInput();
         Simulation.getInstance().update(frameDelta);
 
     }
@@ -140,7 +110,6 @@ public class Display implements GLEventListener {
         long start = System.currentTimeMillis();
 
         Render.clear(drawable);
-
         Render.draw(drawable);
 
         while((System.currentTimeMillis()-start)/1000.0f < 0.01f){

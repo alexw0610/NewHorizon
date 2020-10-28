@@ -1,11 +1,9 @@
-package main.java;
+package com.newhorizon;
 
 import com.jogamp.newt.event.KeyEvent;
-import com.jogamp.newt.event.KeyListener;
+import com.newhorizon.util.Chunkify;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
-
-import java.util.BitSet;
 
 public class Simulation {
 
@@ -26,10 +24,11 @@ public class Simulation {
 
 
     public void update(float frameDelta){
+        updatePlanets();
         updateCameraGravity(frameDelta);
         updateCameraInput(frameDelta);
         RenderManager.getInstance().getActiveCamera().applyMomentum();
-        updatePlanets();
+
 
 
 
@@ -42,7 +41,6 @@ public class Simulation {
 
         if(!newChunk.equals(oldChunk)){
             if(terrainLoader.requestTerrain(camera.getPosition())){
-
             }
         }
     }
@@ -51,7 +49,7 @@ public class Simulation {
 
         Camera camera = RenderManager.getInstance().getActiveCamera();
 
-        float delta = 0.005f*frameDelta;
+        float delta = 0.05f*frameDelta;
         float viewDelta = -0.1f*frameDelta;
 
 
@@ -93,7 +91,11 @@ public class Simulation {
     }
 
     private void updateCameraGravity(float frameDelta){
-
+        Camera camera = RenderManager.getInstance().getActiveCamera();
+        Planet planet = RenderManager.getInstance().getActivePlanets().get(0);
+        Vector3f gravVector = new Vector3f(planet.position).sub(camera.getPosition());
+        gravVector.normalize().mul(0.00001f);
+        //camera.addMomentumVector(gravVector.mul(frameDelta));
     }
 
 }

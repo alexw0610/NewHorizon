@@ -1,4 +1,4 @@
-package main.java;
+package com.newhorizon;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
@@ -19,14 +19,9 @@ public class Octree {
 
     public LinkedList<Node> searchChunk(Vector3f position){
         LinkedList<Node> chunks = root.getParts(position);
-        Collections.sort(chunks, new Comparator<Node>() {
-            @Override
-            public int compare(Node n1, Node n2) {
-                return n2.id.length() - n1.id.length();
-            }
-        });
         return chunks;
     }
+
 
     public class Node{
         boolean isRoot;
@@ -63,7 +58,7 @@ public class Octree {
         public LinkedList<Node> getParts(Vector3f position){
             LinkedList<Node> chunks = new LinkedList<>();
 
-            if(getDistance(position)>((this.span*LookupTable.CHUNKSIZE)*Math.sqrt(3))*0.2f){
+            if(getDistance(position)>((this.span*LookupTable.CHUNKSIZE)*Math.sqrt(3))*0.3f){
                 chunks.add(this);
                 return chunks;
             }else{

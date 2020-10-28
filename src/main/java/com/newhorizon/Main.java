@@ -1,4 +1,4 @@
-package main.java;
+package com.newhorizon;
 
 public class Main {
     public static void main(String[] args) {
