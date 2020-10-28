@@ -1,5 +1,5 @@
 ![Terrain surface](planet1.png)
-#What is New Horizon?
+# What is New Horizon?
 
 New Horizon is the working title for an OpenGL powered voxel engine that triangulates a 3-dimensional scalar field to form a terrain.
 
@@ -11,7 +11,7 @@ The main performance increase comes from utilizing the GPU to calculate most of 
 
 The engine uses an octree implementation along with some other methods inorder to be able to display big scalar fields in a memory efficient way and still allow for an arbitrary high resolution of the mesh.
 
-##What can I do with this?
+## What can I do with this?
 
 The master branch of this repository contains a working example of the engine.
 Clone the repository and use the following maven command to build a .jar file.
