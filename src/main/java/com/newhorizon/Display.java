@@ -6,7 +6,6 @@ import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.*;
 import com.jogamp.opengl.util.Animator;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 
 
@@ -64,12 +63,15 @@ public class Display implements GLEventListener {
         Planet test = new Planet(233,128);
         RenderManager.getInstance().addPlanet(test);
         camera = new Camera();
+        camera.rotate(0,-45,0);
         RenderManager.getInstance().setCamera(camera);
         RenderManager.getInstance().setContext(glad.getContext());
         Simulation.getInstance().init();
         window.setVisible(true);
         window.setSize(1,1);
         window.setSize((int)Settings.WIDTH, (int)Settings.HEIGHT);
+
+
 
     }
 

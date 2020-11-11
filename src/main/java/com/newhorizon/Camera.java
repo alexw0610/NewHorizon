@@ -6,8 +6,6 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
-import java.util.LinkedList;
-
 
 public class Camera {
 
@@ -142,7 +140,7 @@ public class Camera {
 
         testPosition.add(forward).add(sideward).add(upward);
 
-        Vector3i chunk = getChunk();
+        /*Vector3i chunk = getChunk();
         LinkedList<Mesh> terrainList = RenderManager.getInstance().getActivePlanets().get(0).getCurrentMeshes();
         LinkedList<Mesh> meshList = new LinkedList<>();
         for(Mesh mesh : terrainList){
@@ -155,18 +153,18 @@ public class Camera {
                     }
                 }
             }
-        }
+        }*/
 
         if(!testPosition.equals(0,0,0)){
             Mesh.Collision collision = null;
-            if(!meshList.isEmpty()){
+            /*if(!meshList.isEmpty()){
                 for(Mesh mesh : meshList){
                     collision = mesh.getRayIntersectionWithNormal(new Vector3f(this.position),new Vector3f(testPosition));
                     if(collision != null){
                         break;
                     }
                 }
-            }
+            }*/
 
             if(collision != null){
                 Vector3f temp = new Vector3f(testPosition).mul(collision.distance);

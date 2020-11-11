@@ -3,6 +3,7 @@ package com.newhorizon;
 import com.newhorizon.noise.OpenSimplexNoise;
 import org.joml.Vector3f;
 
+import java.awt.image.SinglePixelPackedSampleModel;
 import java.util.LinkedList;
 
 public class Planet {
@@ -150,11 +151,19 @@ public class Planet {
                 ((float)radius*(float)LookupTable.CHUNKSIZE-dist);
     }
 
-    public void setUpdatedMesh(LinkedList<Mesh> meshes){
+    public void setUpdatedMesh(LinkedList<Mesh> meshes,LinkedList<Octree.Node> list){
+        synchronized (fullNodeIds){
             synchronized (updatedMeshes){
+                this.fullNodeIds.clear();
+                for (Octree.Node node: list) {
+                    this.fullNodeIds.add(node.id);
+                }
                 this.updatedMeshes = (LinkedList<Mesh>) meshes.clone();
-                hasUpdated = true;
+                this.fullNodeIdsUpdated = true;
+                this.hasUpdated = true;
             }
+        }
+
     }
 
     public LinkedList<Mesh> getCurrentMeshes(){
@@ -163,19 +172,30 @@ public class Planet {
 
     public void updateMeshes(){
         if(hasUpdated){
-
             synchronized (fullNodeIds){
                 if(fullNodeIdsUpdated){
+                    synchronized (this.currentMeshes){
+                        synchronized(this.updatedMeshes){
+                            LinkedList<Mesh> tempList = new LinkedList<>();
+                            for(Mesh mesh : this.updatedMeshes){
+                                mesh.loadMesh();
+                            }
 
-                    synchronized(this.updatedMeshes){
-                        for(Mesh mesh : this.updatedMeshes){
-                            mesh.loadMesh();
+                            for(Mesh mesh: this.currentMeshes){
+                                if(!fullNodeIds.contains(mesh.id)){
+                                    mesh.unloadMesh();
+                                    tempList.add(mesh);
+                                }
+                            }
+                            //this.currentMeshes.clear();
+                            this.currentMeshes.removeAll(tempList);
+                            this.currentMeshes.addAll(this.updatedMeshes);
+                            this.updatedMeshes.clear();
                         }
-                        this.currentMeshes.addAll(this.updatedMeshes);
-                        this.updatedMeshes.clear();
                     }
 
-                    synchronized (this.currentMeshes){
+
+                    /*synchronized (this.currentMeshes){
                         LinkedList<Mesh> tempList = new LinkedList<>();
                         for(Mesh mesh: this.currentMeshes){
                             if(!this.fullNodeIds.contains(mesh.id)){
@@ -184,8 +204,10 @@ public class Planet {
                             }
                         }
                         this.currentMeshes.removeAll(tempList);
-                    }
+                    }*/
+
                     fullNodeIdsUpdated = false;
+
                 }
 
             }
@@ -206,8 +228,18 @@ public class Planet {
 
     public LinkedList<Octree.Node> filterExisting(LinkedList<Octree.Node> input){
 
-        input.removeIf(node -> this.fullNodeIds.contains(node.id));
-        return input;
+        synchronized (fullNodeIds){
+            int count = 0;
+            for(Octree.Node node: input){
+                if(this.fullNodeIds.contains(node.id)){
+                    count++;
+
+                }
+            }
+            input.removeIf(node -> this.fullNodeIds.contains(node.id));
+            return input;
+        }
+
     }
 
 

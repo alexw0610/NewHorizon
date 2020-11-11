@@ -16,6 +16,7 @@ public class Simulation {
     }
     public void init(){
         terrainLoader = new TerrainLoaderAsync();
+
     }
     public static Simulation getInstance(){
         return instance;

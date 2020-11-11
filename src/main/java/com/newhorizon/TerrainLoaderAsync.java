@@ -5,12 +5,11 @@ import com.jogamp.opengl.*;
 import org.joml.Vector3f;
 
 
-import java.io.File;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import java.util.LinkedList;
-import java.util.ResourceBundle;
+
 import java.util.concurrent.*;
 
 public class TerrainLoaderAsync implements Runnable{
@@ -119,8 +118,9 @@ public class TerrainLoaderAsync implements Runnable{
                     long start = System.currentTimeMillis();
 
                     LinkedList<Octree.Node> structOriginal = planet.tree.searchChunk(lastPositionGenerated);
-                    LinkedList<Octree.Node>struct = planet.filterExisting((LinkedList<Octree.Node>) structOriginal.clone());
-                    planet.setFullNodeIds(structOriginal);//List of all chunks that are needed.
+
+                    LinkedList<Octree.Node> structCopy = (LinkedList<Octree.Node>) structOriginal.clone();
+                    LinkedList<Octree.Node> struct = planet.filterExisting(structOriginal);
 
                     for (Octree.Node node : struct) {
 
@@ -214,16 +214,16 @@ public class TerrainLoaderAsync implements Runnable{
                         }
 
                     }
-                    planet.setUpdatedMesh(generatedMeshes);
-                    generatedMeshes.clear();
+                    planet.setUpdatedMesh(generatedMeshes,structCopy);
+                    //generatedMeshes.clear();
                     long end = System.currentTimeMillis();
-                    System.out.println((end - start) / 1000.0f + " for generating all chunks! AVRG: "+average/count+" "+ Thread.currentThread());
+                    //System.out.println((end - start) / 1000.0f + " for generating all chunks! AVRG: "+average/count+" "+ Thread.currentThread());
                     average +=(end - start) / 1000.0f;
                     count++;
                     if(count > 10){
                         count = 0;
                         average = 0;
-                        System.out.println("reset");
+                        //System.out.println("reset");
                     }
 
 
