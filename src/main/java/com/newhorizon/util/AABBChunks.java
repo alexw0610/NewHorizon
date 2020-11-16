@@ -10,8 +10,6 @@ public class AABBChunks {
 
         LinkedList<Vector3i> list = new LinkedList<>();
 
-        //TODO: might break if coordinates are in negative space
-
         int xSign = pos.x > target.x ? -1: 1;
         int ySign = pos.y > target.y ? -1: 1;
         int zSign = pos.z > target.z ? -1: 1;

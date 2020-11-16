@@ -5,45 +5,31 @@ import com.jogamp.newt.event.WindowEvent;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.*;
 import com.jogamp.opengl.util.Animator;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 
 
-
-public class Display implements GLEventListener {
+public class NewHorizon implements GLEventListener {
 
 
     private Animator animator;
     private Camera camera;
-
     private float frameDelta = 0;
 
-
-    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
-    Display(){
+    NewHorizon(){
         setup();
     }
 
     private void setup(){
-        System.out.println("setup");
-        // Get the default OpenGL profile, reflecting the best for your running platform
-        GLProfile glp = GLProfile.get("GL4");
-        // Specifies a set of OpenGL capabilities, based on your profile.
-        GLCapabilities caps = new GLCapabilities(glp);
-        // Create the OpenGL rendering canvas
-        GLWindow window = GLWindow.create(caps);
-        // Create a animator that drives canvas' display() at the specified FPS.
-        this.animator = new Animator(window);
 
+        GLProfile glp = GLProfile.get("GL4");
+        GLCapabilities caps = new GLCapabilities(glp);
+        GLWindow window = GLWindow.create(caps);
+        this.animator = new Animator(window);
         window.addWindowListener(new WindowAdapter() {
             @Override
             public void windowDestroyNotify(WindowEvent arg0) {
-                // Use a dedicate thread to run the stop() to ensure that the
-                // animator stops before program exits.
                 new Thread(() -> {
                     if (animator.isStarted())
-                        animator.stop();    // stop the animator loop
+                        animator.stop();
                     System.exit(0);
                 }).start();
             }
@@ -53,6 +39,7 @@ public class Display implements GLEventListener {
         window.addKeyListener(Simulation.getInstance().input);
         window.setSize((int)Settings.WIDTH, (int)Settings.HEIGHT);
         window.setTitle("New Horizon");
+
         final GLAutoDrawable sharedDrawable = GLDrawableFactory.getFactory(glp).createDummyAutoDrawable(null, true, caps, null);
         sharedDrawable.display(); // triggers GLContext object creation and native realization.
         GLWindow glad = GLWindow.create(caps);
@@ -68,6 +55,7 @@ public class Display implements GLEventListener {
         RenderManager.getInstance().setContext(glad.getContext());
         Simulation.getInstance().init();
         window.setVisible(true);
+        //TODO: Hotfix for a display error.
         window.setSize(1,1);
         window.setSize((int)Settings.WIDTH, (int)Settings.HEIGHT);
 
@@ -78,7 +66,7 @@ public class Display implements GLEventListener {
 
     @Override
     public void init(GLAutoDrawable drawable) {
-        System.out.println("init");
+
         GL4 gl = drawable.getGL().getGL4();
         gl.glEnable(gl.GL_DEPTH_TEST);
         gl.glDepthFunc(gl.GL_LESS);
@@ -93,21 +81,19 @@ public class Display implements GLEventListener {
 
     @Override
     public void dispose(GLAutoDrawable drawable) {
-        System.out.println("dispose");
+
     }
 
     private void update(){
-
         Simulation.getInstance().update(frameDelta);
-
     }
 
     @Override
     public void display(GLAutoDrawable drawable) {
+
         if(RenderManager.getInstance().getContext() != null){
             update();
         }
-
 
         long start = System.currentTimeMillis();
 
@@ -129,6 +115,10 @@ public class Display implements GLEventListener {
     @Override
     public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
 
+    }
+
+    public static void main(String[] args) {
+        new NewHorizon();
     }
 
 }

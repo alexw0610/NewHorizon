@@ -84,13 +84,7 @@ public class Camera {
         target.z = upward.dot(vector);
         target.normalize();
 
-        //addMomentum(target.x,target.y,target.z);
-        //addMomentum(target.x,target.z,target.y);
-        //addMomentum(target.y,target.x,target.z);
         addMomentum(target.y,target.z*-1.0f,target.x);
-        //addMomentum(target.z,target.y,target.x);
-        //addMomentum(target.z,target.x,target.y);
-
 
     }
 
@@ -131,8 +125,6 @@ public class Camera {
     public void applyMomentum(){
 
         Vector3f testPosition = new Vector3f(0,0,0);
-        float buffer = 2.0f;
-        boolean prematureCollision = false;
 
         Vector3f forward = new Vector3f(this.direction).mul(forwardMomentum);
         Vector3f sideward = new Vector3f(this.side).mul(sideMomentum);
@@ -140,49 +132,11 @@ public class Camera {
 
         testPosition.add(forward).add(sideward).add(upward);
 
-        /*Vector3i chunk = getChunk();
-        LinkedList<Mesh> terrainList = RenderManager.getInstance().getActivePlanets().get(0).getCurrentMeshes();
-        LinkedList<Mesh> meshList = new LinkedList<>();
-        for(Mesh mesh : terrainList){
-            for(short x = -1 ; x < 2;x++){
-                for(short y = -1 ; y < 2;y++){
-                    for(short z = -1 ; z < 2;z++){
-                        if(mesh.position.equals(((float)chunk.x+x)*LookupTable.CHUNKSIZE,((float)chunk.y+y)*LookupTable.CHUNKSIZE,((float)chunk.z+z)*LookupTable.CHUNKSIZE)){
-                            meshList.add(mesh);
-                        }
-                    }
-                }
-            }
-        }*/
 
         if(!testPosition.equals(0,0,0)){
-            Mesh.Collision collision = null;
-            /*if(!meshList.isEmpty()){
-                for(Mesh mesh : meshList){
-                    collision = mesh.getRayIntersectionWithNormal(new Vector3f(this.position),new Vector3f(testPosition));
-                    if(collision != null){
-                        break;
-                    }
-                }
-            }*/
 
-            if(collision != null){
-                Vector3f temp = new Vector3f(testPosition).mul(collision.distance);
-                if(temp.length() < testPosition.length()*buffer){
-                    this.forwardMomentum = 0.0f;
-                    this.sideMomentum = 0.0f;
-                    this.gravityMomentum = 0.0f;
-                    System.out.println("collision");
-                    if(collision.normal.dot(testPosition)>0){
-                        collision.normal = collision.normal.mul(-1.0f);
-                    }
-                    addMomentumVector(collision.normal);
-                }else {
-                    this.position.add(new Vector3f(testPosition));
-                }
-            }else{
-                this.position.add(new Vector3f(testPosition));
-            }
+            this.position.add(new Vector3f(testPosition));
+
             forwardMomentum = forwardMomentum*0.75f;
             sideMomentum = sideMomentum*0.75f;
             gravityMomentum = gravityMomentum*0.75f;

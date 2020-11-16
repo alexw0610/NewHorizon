@@ -18,9 +18,7 @@ public class ComputeShader {
         GL4 gl = GLContext.getCurrentGL().getGL4();
 
 
-        //String[] temp = file.getName().split("\\.");
-        //name = temp[0];
-        name = name;
+        this.name = name;
         program = gl.glCreateProgram();
         if(!gl.glIsProgram(program)){
             System.err.println("Could not create program");

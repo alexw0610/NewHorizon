@@ -5,6 +5,7 @@ import com.jogamp.opengl.GLContext;
 import java.util.LinkedList;
 
 public class RenderManager {
+
     private static RenderManager instance = new RenderManager();
     private LinkedList<Planet> planetList = new LinkedList<>();
     private GLContext context;

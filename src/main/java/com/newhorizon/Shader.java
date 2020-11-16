@@ -23,8 +23,6 @@ public class Shader {
     public Shader(String name, InputStream file){
 
         GL4 gl = GLContext.getCurrentGL().getGL4();
-        //String[] temp = file.getName().split("\\.");
-        //name = temp[0];
         this.name = name;
         program = gl.glCreateProgram();
         if(!gl.glIsProgram(program)){
@@ -51,8 +49,6 @@ public class Shader {
 
         //Fragment test.Shader
         fs = gl.glCreateShader(gl.GL_FRAGMENT_SHADER);
-        //String fname = file.getParentFile().getAbsolutePath()+"\\"+temp[0]+".fs";
-        //File fsfile = new File(fname);
         InputStream fragInput = this.getClass().getResourceAsStream("/shader/"+this.name+".fs");
         content = new String[]{readfile(new InputStreamReader(fragInput))};
 

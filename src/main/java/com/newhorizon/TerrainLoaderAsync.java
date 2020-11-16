@@ -24,7 +24,7 @@ public class TerrainLoaderAsync implements Runnable{
     private RenderManager renderManager;
     private boolean firstTime = true;
     private GL4 gl;
-    private int[] persistenSSBOHandels;
+    private int[] persistentSSBOHandles;
 
 
 
@@ -33,7 +33,6 @@ public class TerrainLoaderAsync implements Runnable{
         renderManager = RenderManager.getInstance();
         t = new Thread(this,"TerrainGenerator");
         t.start();
-        System.out.println("terrainloader inited");
 
     }
 
@@ -41,8 +40,8 @@ public class TerrainLoaderAsync implements Runnable{
 
         gl.glUseProgram(compute.program);
 
-        persistenSSBOHandels = new int[8];
-        gl.glGenBuffers(8,persistenSSBOHandels,0);
+        persistentSSBOHandles = new int[8];
+        gl.glGenBuffers(8,persistentSSBOHandles,0);
 
         int[] indicesLookup = LookupTable.getAllIndices();
         IntBuffer indicesLookupBuffer = IntBuffer.allocate(indicesLookup.length);
@@ -55,44 +54,44 @@ public class TerrainLoaderAsync implements Runnable{
         verticesLookupBuffer.rewind();
 
         //indicesLookup
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER,persistenSSBOHandels[0]);
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER,persistentSSBOHandles[0]);
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER,indicesLookup.length*4,indicesLookupBuffer,gl.GL_STATIC_READ);
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER,1,persistenSSBOHandels[0]);
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER,1,persistentSSBOHandles[0]);
 
         //verticesLookup
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER,persistenSSBOHandels[1]);
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER,persistentSSBOHandles[1]);
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER,verticesLookup.length*4,verticesLookupBuffer,gl.GL_STATIC_READ);
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER,2,persistenSSBOHandels[1]);
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER,2,persistentSSBOHandles[1]);
 
         //vertices out
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistenSSBOHandels[2]);
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistentSSBOHandles[2]);
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, ((36 * (16 * 16 * 16)) * 4), null, gl.GL_DYNAMIC_DRAW);
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 5, persistenSSBOHandels[2]);
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 5, persistentSSBOHandles[2]);
 
         //indices out
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistenSSBOHandels[3]);
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistentSSBOHandles[3]);
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, ((15 * (16 * 16 * 16)) * 4), null, gl.GL_DYNAMIC_DRAW);
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 6, persistenSSBOHandels[3]);
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 6, persistentSSBOHandles[3]);
 
         //normals out
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistenSSBOHandels[4]);
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistentSSBOHandles[4]);
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, ((36 * (16 * 16 * 16)) * 4), null, gl.GL_DYNAMIC_DRAW);
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 7, persistenSSBOHandels[4]);
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 7, persistentSSBOHandles[4]);
 
         //voxel data
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistenSSBOHandels[5]);
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistentSSBOHandles[5]);
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, (17 * 17 * 17) * 4,null, gl.GL_STATIC_READ);
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 4, persistenSSBOHandels[5]);
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 4, persistentSSBOHandles[5]);
 
         //resolution in
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistenSSBOHandels[6]);
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistentSSBOHandles[6]);
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, 4, null, gl.GL_STATIC_READ);
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 3, persistenSSBOHandels[6]);
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 3, persistentSSBOHandles[6]);
 
         //count out
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistenSSBOHandels[7]);
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistentSSBOHandles[7]);
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, (16 * 16 * 16) * 4, null, gl.GL_DYNAMIC_DRAW);
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 8, persistenSSBOHandels[7]);
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 8, persistentSSBOHandles[7]);
 
 
     }
@@ -142,22 +141,22 @@ public class TerrainLoaderAsync implements Runnable{
                             spanBuffer.rewind();
 
                             //voxelData in
-                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistenSSBOHandels[5]);
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistentSSBOHandles[5]);
                             gl.glBufferSubData(gl.GL_SHADER_STORAGE_BUFFER,0,(17 * 17 * 17) * 4,voxelBuffer);
 
                             //resolution in
-                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistenSSBOHandels[6]);
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistentSSBOHandles[6]);
                             gl.glBufferSubData(gl.GL_SHADER_STORAGE_BUFFER,0,4,spanBuffer);
 
                             //count out
-                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistenSSBOHandels[7]);
+                            gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, persistentSSBOHandles[7]);
                             gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, (16 * 16 * 16) * 4, null, gl.GL_DYNAMIC_DRAW);
 
                                 gl.glDispatchCompute(16, 16, 16);
                                 gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT);
 
                             IntBuffer indcount = IntBuffer.allocate(16 * 16 * 16);
-                            gl.glGetNamedBufferSubData(persistenSSBOHandels[7], 0, (16 * 16 * 16) * 4, indcount);
+                            gl.glGetNamedBufferSubData(persistentSSBOHandles[7], 0, (16 * 16 * 16) * 4, indcount);
 
                             int indSize = 0;
                             int verSize = 0;
@@ -215,15 +214,13 @@ public class TerrainLoaderAsync implements Runnable{
 
                     }
                     planet.setUpdatedMesh(generatedMeshes,structCopy);
-                    //generatedMeshes.clear();
                     long end = System.currentTimeMillis();
-                    //System.out.println((end - start) / 1000.0f + " for generating all chunks! AVRG: "+average/count+" "+ Thread.currentThread());
+                    System.out.println((end - start) / 1000.0f + " for generating all chunks! Rolling average: "+average/count+" "+ Thread.currentThread());
                     average +=(end - start) / 1000.0f;
                     count++;
                     if(count > 10){
                         count = 0;
                         average = 0;
-                        //System.out.println("reset");
                     }
 
 

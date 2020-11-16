@@ -20,4 +20,10 @@ Clone the repository and use the following maven command to build a .jar file.
 
 This allows you to check out a demo planet and see the engine in work.
 
+### Open Simplex Noise
+
+The Noise method used for terrain generation is based on example code by Stefan Gustavson (stegu@itn.liu.se).
+Optimisations by Peter Eastman (peastman@drizzle.stanford.edu).
+Better rank ordering method by Stefan Gustavson in 2012.
+
 ![Terrain](planet_desert_2.png)

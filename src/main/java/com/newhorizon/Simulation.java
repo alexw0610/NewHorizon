@@ -96,7 +96,6 @@ public class Simulation {
         Planet planet = RenderManager.getInstance().getActivePlanets().get(0);
         Vector3f gravVector = new Vector3f(planet.position).sub(camera.getPosition());
         gravVector.normalize().mul(0.00001f);
-        //camera.addMomentumVector(gravVector.mul(frameDelta));
     }
 
 }

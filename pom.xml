@@ -63,7 +63,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>com.newhorizon.Main</mainClass>
+                            <mainClass>com.newhorizon.NewHorizon</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

@@ -2,8 +2,6 @@ package com.newhorizon;
 
 import com.newhorizon.noise.OpenSimplexNoise;
 import org.joml.Vector3f;
-
-import java.awt.image.SinglePixelPackedSampleModel;
 import java.util.LinkedList;
 
 public class Planet {
@@ -187,24 +185,11 @@ public class Planet {
                                     tempList.add(mesh);
                                 }
                             }
-                            //this.currentMeshes.clear();
                             this.currentMeshes.removeAll(tempList);
                             this.currentMeshes.addAll(this.updatedMeshes);
                             this.updatedMeshes.clear();
                         }
                     }
-
-
-                    /*synchronized (this.currentMeshes){
-                        LinkedList<Mesh> tempList = new LinkedList<>();
-                        for(Mesh mesh: this.currentMeshes){
-                            if(!this.fullNodeIds.contains(mesh.id)){
-                                mesh.unloadMesh();
-                                tempList.add(mesh);
-                            }
-                        }
-                        this.currentMeshes.removeAll(tempList);
-                    }*/
 
                     fullNodeIdsUpdated = false;
 

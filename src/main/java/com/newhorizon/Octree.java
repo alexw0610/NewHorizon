@@ -1,10 +1,7 @@
 package com.newhorizon;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
-
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedList;
 
 public class Octree {
