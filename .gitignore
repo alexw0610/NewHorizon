@@ -2,11 +2,12 @@
 *.class
 #directories
 target/
-idea/
+
 # Log file
 *.log
 # intelij files
 *.iml
+.idea/
 # BlueJ files
 *.ctxt
 
