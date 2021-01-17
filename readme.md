@@ -16,7 +16,7 @@ The engine uses an octree implementation along with some other methods inorder t
 The master branch of this repository contains a working example of the engine.
 Clone the repository and use the following maven command to build a .jar file.
 
-    mvn clean install
+    mvn package
 
 This allows you to check out a demo planet and see the engine in work.
 
